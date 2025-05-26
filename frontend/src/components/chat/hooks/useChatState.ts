@@ -418,9 +418,33 @@ export const useChatState = () => {
   };
 
   const handleLocationSelect = (location: string) => {
-    setSelectedOption(location);
+    // 유저 메시지 추가
+    const newUserMessage: Message = {
+      id: messages.length + 1,
+      text: location,
+      isUser: true,
+      timestamp: new Date(),
+    };
+  
+    // 메시지 반영
+    setChatHistories(prev =>
+      prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, newUserMessage] }
+          : chat
+      )
+    );
+  
+    // 입력창 및 선택창 제거
+    setSelectedOption("");
+    setInput("");
+  
+    // 바로 다음 스텝으로 진행
+    if (preferences.step === 0) {
+      setPreferences(prev => ({ ...prev, location, step: 1 }));
+    }
   };
-
+  
   const handleStartFilter = () => {
     setPreferences(prev => ({ ...prev, step: 0 }));
     setRecommendationShown(false);
