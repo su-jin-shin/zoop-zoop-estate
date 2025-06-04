@@ -46,10 +46,10 @@ const PropertyDetail = () => {
   const [mainImage, setMainImage] = useState(propertyData.images[0]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-6 py-6 max-w-3xl">
         <div className="mb-6">
           <div className="flex items-center mb-4">
             <Link to="/" className="flex items-center text-real-darkGray hover:text-real-blue mr-4">
@@ -84,159 +84,164 @@ const PropertyDetail = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative aspect-video">
-                <img 
-                  src={mainImage} 
-                  alt={propertyData.title}
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-              
-              <div className="p-1 overflow-x-auto whitespace-nowrap">
-                {propertyData.images.map((image, index) => (
-                  <button 
-                    key={index}
-                    onClick={() => setMainImage(image)}
-                    className={`inline-block w-20 h-20 m-1 rounded overflow-hidden ${mainImage === image ? 'ring-2 ring-real-blue' : ''}`}
-                  >
-                    <img 
-                      src={image} 
-                      alt={`${propertyData.title} ${index + 1}`}
-                      className="w-full h-full object-cover" 
-                    />
-                  </button>
-                ))}
-              </div>
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="relative aspect-video">
+              <img 
+                src={mainImage} 
+                alt={propertyData.title}
+                className="w-full h-full object-cover" 
+              />
             </div>
             
-            <div className="mt-6 bg-white rounded-lg shadow-md overflow-hidden">
-              <Tabs defaultValue="details">
-                <TabsList className="bg-real-lightBlue border-b w-full justify-start rounded-none p-0">
-                  <TabsTrigger value="details" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">상세정보</TabsTrigger>
-                  <TabsTrigger value="features" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">특징</TabsTrigger>
-                  <TabsTrigger value="location" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">위치</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details" className="p-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-6">
-                    <div>
-                      <p className="text-real-darkGray text-sm">매물 종류</p>
-                      <p className="font-medium text-real-black">{propertyData.propertyType}</p>
-                    </div>
-                    <div>
-                      <p className="text-real-darkGray text-sm">평수</p>
-                      <p className="font-medium text-real-black">{propertyData.size}</p>
-                    </div>
-                    <div>
-                      <p className="text-real-darkGray text-sm">방 / 화장실</p>
-                      <p className="font-medium text-real-black">{propertyData.rooms}개 / {propertyData.baths}개</p>
-                    </div>
-                    <div>
-                      <p className="text-real-darkGray text-sm">층수</p>
-                      <p className="font-medium text-real-black">{propertyData.floor}</p>
-                    </div>
-                  </div>
-                  
-                  <Separator className="my-4" />
-                  
-                  <h3 className="font-medium text-lg mb-3">상세 설명</h3>
-                  <p className="text-real-darkGray whitespace-pre-line">
-                    {propertyData.description}
-                  </p>
-                </TabsContent>
-                
-                <TabsContent value="features" className="p-6">
-                  <h3 className="font-medium text-lg mb-3">매물 특징</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {propertyData.features.map((feature, index) => (
-                      <div key={index} className="flex items-center bg-real-lightBlue rounded-lg p-3">
-                        <div className="bg-real-blue/10 rounded-full p-2 mr-2">
-                          <Home className="h-5 w-5 text-real-blue" />
-                        </div>
-                        <span className="text-real-black">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="location" className="p-6">
-                  <h3 className="font-medium text-lg mb-3">위치 정보</h3>
-                  <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-                    <p className="text-real-darkGray">지도 영역 (실제 앱에서는 지도 API 통합)</p>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-real-darkGray">
-                      <MapPin className="h-4 w-4 mr-1 inline-block" />
-                      {propertyData.address}
-                    </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
+            <div className="p-1 overflow-x-auto whitespace-nowrap">
+              {propertyData.images.map((image, index) => (
+                <button 
+                  key={index}
+                  onClick={() => setMainImage(image)}
+                  className={`inline-block w-20 h-20 m-1 rounded overflow-hidden ${mainImage === image ? 'ring-2 ring-real-blue' : ''}`}
+                >
+                  <img 
+                    src={image} 
+                    alt={`${propertyData.title} ${index + 1}`}
+                    className="w-full h-full object-cover" 
+                  />
+                </button>
+              ))}
             </div>
           </div>
           
-          <div>
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-              <div className="mb-6">
-                <p className="text-sm text-real-darkGray mb-1">가격</p>
-                <div className="flex items-baseline">
-                  {propertyData.deposit && (
-                    <span className="font-bold text-xl text-real-black mr-1">
-                      {propertyData.deposit} /
-                    </span>
-                  )}
-                  <span className="font-bold text-xl text-real-black">
-                    {propertyData.price}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-6">
+              <p className="text-sm text-real-darkGray mb-1">가격</p>
+              <div className="flex items-baseline">
+                {propertyData.deposit && (
+                  <span className="font-bold text-2xl text-real-black mr-1">
+                    {propertyData.deposit} /
                   </span>
+                )}
+                <span className="font-bold text-2xl text-real-black">
+                  {propertyData.price}
+                </span>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="flex items-center">
+                <Home className="h-4 w-4 text-real-darkGray mr-2" />
+                <span className="text-real-black">{propertyData.propertyType}</span>
+              </div>
+              <div className="flex items-center">
+                <Ruler className="h-4 w-4 text-real-darkGray mr-2" />
+                <span className="text-real-black">{propertyData.size}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-real-black">{propertyData.rooms}개 방 / {propertyData.baths}개 화장실</span>
+              </div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-real-darkGray mr-2" />
+                <span className="text-real-black">{propertyData.builtIn}</span>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <img 
+                  src={propertyData.agent.image} 
+                  alt={propertyData.agent.name} 
+                  className="w-12 h-12 rounded-full mr-3" 
+                />
+                <div>
+                  <p className="font-medium">{propertyData.agent.name}</p>
+                  <p className="text-sm text-real-darkGray">{propertyData.agent.company}</p>
                 </div>
               </div>
+              <p className="text-sm text-real-darkGray">
+                등록일: {propertyData.createdAt}
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <Tabs defaultValue="details">
+              <TabsList className="bg-real-lightBlue border-b w-full justify-start rounded-none p-0">
+                <TabsTrigger value="details" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">상세정보</TabsTrigger>
+                <TabsTrigger value="features" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">특징</TabsTrigger>
+                <TabsTrigger value="location" className="py-3 px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue">위치</TabsTrigger>
+              </TabsList>
               
-              <Separator className="my-4" />
-              
-              <div className="mb-6">
-                <div className="flex items-center mb-3">
-                  <Home className="h-4 w-4 text-real-darkGray mr-2" />
-                  <span className="text-real-black">{propertyData.propertyType}</span>
-                </div>
-                <div className="flex items-center mb-3">
-                  <Ruler className="h-4 w-4 text-real-darkGray mr-2" />
-                  <span className="text-real-black">{propertyData.size}</span>
-                </div>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 text-real-darkGray mr-2" />
-                  <span className="text-real-black">건축년도: {propertyData.builtIn}</span>
-                </div>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="mb-6">
-                <div className="flex items-center mb-4">
-                  <img 
-                    src={propertyData.agent.image} 
-                    alt={propertyData.agent.name} 
-                    className="w-12 h-12 rounded-full mr-3" 
-                  />
+              <TabsContent value="details" className="p-6">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <p className="font-medium">{propertyData.agent.name}</p>
-                    <p className="text-sm text-real-darkGray">{propertyData.agent.company}</p>
+                    <p className="text-real-darkGray text-sm">매물 종류</p>
+                    <p className="font-medium text-real-black">{propertyData.propertyType}</p>
+                  </div>
+                  <div>
+                    <p className="text-real-darkGray text-sm">평수</p>
+                    <p className="font-medium text-real-black">{propertyData.size}</p>
+                  </div>
+                  <div>
+                    <p className="text-real-darkGray text-sm">방 / 화장실</p>
+                    <p className="font-medium text-real-black">{propertyData.rooms}개 / {propertyData.baths}개</p>
+                  </div>
+                  <div>
+                    <p className="text-real-darkGray text-sm">층수</p>
+                    <p className="font-medium text-real-black">{propertyData.floor}</p>
                   </div>
                 </div>
-                <p className="text-sm text-real-darkGray mb-2">
-                  등록일: {propertyData.createdAt}
+                
+                <Separator className="my-4" />
+                
+                <h3 className="font-medium text-lg mb-3">상세 설명</h3>
+                <p className="text-real-darkGray whitespace-pre-line">
+                  {propertyData.description}
                 </p>
-              </div>
+              </TabsContent>
               
-              <Button className="w-full mb-3" size="lg">
-                연락하기
-              </Button>
-              <Button variant="outline" className="w-full" size="lg">
-                문의하기
-              </Button>
-            </div>
+              <TabsContent value="features" className="p-6">
+                <h3 className="font-medium text-lg mb-3">매물 특징</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {propertyData.features.map((feature, index) => (
+                    <div key={index} className="flex items-center bg-real-lightBlue rounded-lg p-3">
+                      <div className="bg-real-blue/10 rounded-full p-2 mr-2">
+                        <Home className="h-5 w-5 text-real-blue" />
+                      </div>
+                      <span className="text-real-black">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="location" className="p-6">
+                <h3 className="font-medium text-lg mb-3">위치 정보</h3>
+                <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
+                  <p className="text-real-darkGray">지도 영역 (실제 앱에서는 지도 API 통합)</p>
+                </div>
+                <div className="mt-4">
+                  <p className="text-real-darkGray">
+                    <MapPin className="h-4 w-4 mr-1 inline-block" />
+                    {propertyData.address}
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="container mx-auto px-6 py-4 max-w-3xl">
+          <div className="flex space-x-3">
+            <Button className="flex-1" size="lg">
+              연락하기
+            </Button>
+            <Button variant="outline" className="flex-1" size="lg">
+              문의하기
+            </Button>
           </div>
         </div>
       </div>

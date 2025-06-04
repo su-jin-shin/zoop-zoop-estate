@@ -28,7 +28,7 @@ const ChatBotToggle = () => {
   };
 
   const renderTriggerButton = () => (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-4 z-50">
       <Button
         className="rounded-full w-14 h-14 shadow-lg bg-real-blue hover:bg-real-blue/90"
         onClick={() => setIsOpen(true)}
