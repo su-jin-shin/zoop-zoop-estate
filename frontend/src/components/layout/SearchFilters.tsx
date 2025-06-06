@@ -18,20 +18,20 @@ const SearchFilters = () => {
   const [bedrooms, setBedrooms] = useState("");
   
   return (
-    <div className="bg-white rounded-md shadow-sm border border-gray-100 p-3 mb-4">
-      <div className="grid grid-cols-1 gap-2">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-5">
+      <div className="grid grid-cols-1 gap-3">
         <div className="relative">
           <Input 
             type="text" 
             placeholder="지역, 지하철역, 학교 등"
-            className="pl-8 pr-3 py-1 w-full text-sm h-8"
+            className="pl-10 pr-4 py-2 w-full text-sm h-10"
           />
-          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Select value={propertyType} onValueChange={setPropertyType}>
-            <SelectTrigger className="w-full text-xs h-8">
+            <SelectTrigger className="w-full text-sm h-10">
               <SelectValue placeholder="매물 유형" />
             </SelectTrigger>
             <SelectContent>
@@ -43,7 +43,7 @@ const SearchFilters = () => {
           </Select>
           
           <Select value={bedrooms} onValueChange={setBedrooms}>
-            <SelectTrigger className="w-full text-xs h-8">
+            <SelectTrigger className="w-full text-sm h-10">
               <SelectValue placeholder="방 개수" />
             </SelectTrigger>
             <SelectContent>
@@ -55,9 +55,9 @@ const SearchFilters = () => {
         </div>
         
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-real-darkGray">가격 범위</span>
-            <span className="text-xs font-medium text-real-blue">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-real-darkGray">가격 범위</span>
+            <span className="text-sm font-medium text-real-blue">
               {priceRange[0]}만원 - {priceRange[1] === 100 ? '무제한' : `${priceRange[1]}만원`}
             </span>
           </div>
@@ -67,11 +67,11 @@ const SearchFilters = () => {
             step={1} 
             value={priceRange}
             onValueChange={setPriceRange}
-            className="my-2"
+            className="my-3"
           />
         </div>
         
-        <Button className="w-full bg-real-blue hover:bg-blue-700 h-8 text-xs">
+        <Button className="w-full bg-real-blue hover:bg-blue-700 h-10 text-sm">
           검색하기
         </Button>
       </div>

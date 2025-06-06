@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ChatHistory, Message, PropertyPreferences } from "../types/chatTypes";
 import { 
@@ -80,17 +79,16 @@ export const useChatState = () => {
       // For all transaction types, ask for price first
       addBotMessage(priceQuestion);
     } else if (preferences.step === 4 && preferences.priceRange && !lastMessage.inputType) {
-      // After price, if transaction type is 월세 or 전세, ask for deposit amount
-      if (preferences.transactionType === '월세' || preferences.transactionType === '전세') {
+      // After price, only ask for deposit amount for 월세
+      if (preferences.transactionType === '월세') {
         addBotMessage(depositQuestion);
       } else {
-        // For 매매, skip deposit question and show recommendation summary
+        // For 전세 and 매매, skip deposit question and show recommendation summary
         showRecommendationSummary();
       }
     } else if (preferences.step === 5 && !recommendationShown) {
-      // For 월세 or 전세 with deposit set or skipped, show recommendation summary
-      if ((preferences.transactionType === '월세' || preferences.transactionType === '전세') 
-          && !lastMessage.inputType) {
+      // For 월세 with deposit set or skipped, show recommendation summary
+      if (preferences.transactionType === '월세' && !lastMessage.inputType) {
         showRecommendationSummary();
       }
     }
@@ -252,11 +250,7 @@ export const useChatState = () => {
       }
       summary += ` 조건에 맞는 매물을 찾아볼게요.`;
     } else if (preferences.transactionType === '전세') {
-      summary += `전세금 ${preferences.priceRange}만원`;
-      if (preferences.depositAmount) {
-        summary += `, 보증금 ${preferences.depositAmount}만원`;
-      }
-      summary += ` 조건에 맞는 매물을 찾아볼게요.`;
+      summary += `전세금 ${preferences.priceRange}만원 조건에 맞는 매물을 찾아볼게요.`;
     } else {
       summary += `매매가 ${preferences.priceRange}만원 조건에 맞는 매물을 찾아볼게요.`;
     }
@@ -269,7 +263,7 @@ export const useChatState = () => {
     });
     
     // Update chat title based on user preferences using the requested format without colon
-    let deposit = preferences.depositAmount ? ` (보증금 ${preferences.depositAmount})` : '';
+    let deposit = preferences.depositAmount && preferences.transactionType === '월세' ? ` (보증금 ${preferences.depositAmount})` : '';
     const chatTitle = `${preferences.location} / ${preferences.transactionType} / ${preferences.propertyType} / ${preferences.priceRange}${deposit}`;
     
     setChatHistories(prev => 
@@ -382,9 +376,9 @@ export const useChatState = () => {
           step: 4 
         }));
       } else if (preferences.step === 4) {
-        // For 월세 or 전세, this is deposit amount
-        // Now handles both empty input (건너뛰기) and filled input
-        if (preferences.transactionType === '월세' || preferences.transactionType === '전세') {
+        // For 월세, this is deposit amount
+        // For 전세 and 매매, this step is skipped
+        if (preferences.transactionType === '월세') {
           setPreferences(prev => ({ 
             ...prev, 
             depositAmount: isDepositEmpty ? undefined : messageText, 
@@ -444,7 +438,7 @@ export const useChatState = () => {
       setPreferences(prev => ({ ...prev, location, step: 1 }));
     }
   };
-  
+
   const handleStartFilter = () => {
     setPreferences(prev => ({ ...prev, step: 0 }));
     setRecommendationShown(false);
@@ -514,4 +508,3 @@ export const useChatState = () => {
     handleBackButton,
   };
 };
-
