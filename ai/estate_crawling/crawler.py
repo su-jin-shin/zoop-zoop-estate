@@ -93,15 +93,15 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
                 # 해당 매물의 단지 정보
                 if article.get('isComplex'): # 단지가 존재하면 빌라 단지 정보를 가져온다.
                     article['complexInfo'] = property_info_data['data']['communalComplexInfo']  
-                    villa_complex_no = article['complexInfo']['complexNumber']
+                    complex_no = article['complexInfo']['complexNumber']
           
-                    villa_complex_info_url = f'https://new.land.naver.com/api/property/complex/villa/{villa_complex_no}'
-                    villa_complex_info_data = await fetch_json(session, villa_complex_info_url)
-                    article['complexInfo']['complexDetails']= villa_complex_info_data['data']
+                    complex_info_url = f'https://new.land.naver.com/api/property/complex/villa/{complex_no}'
+                    complex_info_data = await fetch_json(session, complex_info_url)
+                    article['complexInfo']['complexDetails']= complex_info_data['data']
 
-                    villa_complex_photo_url = f'https://new.land.naver.com/api/property/complex/villa/{villa_complex_no}/photo'
-                    villa_complex_photo_data = await fetch_json(session, villa_complex_photo_url)
-                    article['complexInfo']['complexDetails']['photoInfo'] = villa_complex_photo_data['data']
+                    complex_photo_url = f'https://new.land.naver.com/api/property/complex/villa/{complex_no}/photo'
+                    complex_photo_data = await fetch_json(session, complex_photo_url)
+                    article['complexInfo']['complexDetails']['photoInfo'] = complex_photo_data['data']
 
             # 단지 정보 불러오기(아파트, 오피스텔)
             if real_estate_type_code in ['APT', 'OPST']:    
