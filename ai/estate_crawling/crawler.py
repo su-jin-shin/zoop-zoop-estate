@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 import os
 from aiohttp import ClientSession, ClientTimeout
-from typing import List, Dict
+
 
 # 헤더/쿠키
 with open('secrets/headers.json', 'r', encoding='utf-8') as f:
@@ -123,7 +123,8 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     v_complex_cache = {}
     a_complex_cache = {}
 
-    for page in range(1, 2):  # 1페이지만
+    page = 1
+    while True:
         url = (
             f'https://new.land.naver.com/api/articles'
             f'?cortarNo={dong_code}'
@@ -157,6 +158,11 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
             ]
             results = await asyncio.gather(*tasks) # n번째 배치의 결과가 담긴다.
             all_details.extend(results) # 모든 결과가 누적되어 쌓인다.
+
+        if not data.get("isMoreData", False):  # 더 이상의 페이지가 없으면 종료
+            break
+        page += 1
+        await asyncio.sleep(0.05) # API 과부하 방지
 
     # 마지막에 한 번에 저장   
     os.makedirs('output', exist_ok=True)
