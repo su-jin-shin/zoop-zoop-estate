@@ -1,9 +1,11 @@
 import asyncio
-import aiohttp
-import aiofiles
 import json
-from datetime import datetime
+import math
 import os
+from datetime import datetime
+
+import aiofiles
+import aiohttp
 from aiohttp import ClientSession, ClientTimeout
 
 
@@ -14,8 +16,9 @@ with open('secrets/headers.json', 'r', encoding='utf-8') as f:
 with open('secrets/cookies.json', 'r', encoding='utf-8') as f:
     COOKIES = json.load(f)
 
-BATCH_SIZE = 20  # 매물 병렬 처리 단위
-semaphore = asyncio.Semaphore(10)
+semaphore = asyncio.Semaphore(30)
+BATCH_SIZE = 50  # 매물 병렬 처리 단위
+
 
 async def fetch_json(session: ClientSession, url: str) -> dict:
     try:
@@ -34,6 +37,25 @@ async def fetch_json(session: ClientSession, url: str) -> dict:
     except Exception as e:
         print(f'요청 에러: {url} | 에러: {e}')
         return {}
+
+
+async def fetch_page(session, page, dong_code, real_estate_type_code, trade_type_code, deal_or_warrant_price, rent_price):
+    url = (
+        f'https://new.land.naver.com/api/articles'
+        f'?cortarNo={dong_code}'
+        f'&order=rank'
+        f'&realEstateType={real_estate_type_code}'  # 아파트/오피스텔/빌라/원룸-투룸
+        f'&tradeType={trade_type_code}'  # 매매/전세/월세
+        f'&tag=%3A%3A%3A%3A%3A%3A%3A%3A'
+        f'&rentPriceMin=0&rentPriceMax={rent_price}'  # 900000000
+        f'&priceMin=0&priceMax={deal_or_warrant_price}'
+        f'&areaMin=0&areaMax=900000000'
+        f'&priceType=RETAIL'
+        f'&showArticle=false'
+        f'&sameAddressGroup=false'
+        f'&page={page}'
+    )
+    return await fetch_json(session, url)
 
 
 async def handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache):
@@ -114,57 +136,76 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     deal_or_warrant_price = cond['deal_or_warrant_price']
     rent_price = cond['rent_price']
 
-    total_articles = 0
-    all_details = []
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    json_file_subject = f'output/detail_data_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
+    all_articles = []
+
+    # 1. 1페이지 먼저 요청하여 총 매물 수 알아내기
+    first_page_data = await fetch_page(session, 1, dong_code, real_estate_type_code, trade_type_code,
+                                       deal_or_warrant_price, rent_price)
+    first_articles = first_page_data.get('articleList', [])
+    map_count = first_page_data.get('mapExposedCount') # 총 매물 수
+
+    if not first_articles:
+        return []
+    all_articles.extend(first_articles)
+
+    # 2
+    is_next = first_page_data.get('isMoreData')
+    if is_next: # 1페이지가 끝이 아니라 2페이지도 존재하면
+
+        if map_count:  # map_count가 있으면 병렬 처리
+            total_pages = math.ceil(map_count / len(first_articles)) # len(first_articles)는 네이버 부동산 1페이지당 매물 수
+            print(f'[INFO] 총 매물 수: {map_count}, 총 페이지 수: {total_pages}')
+
+            tasks = [
+                fetch_page(session, page, dong_code, real_estate_type_code, trade_type_code, deal_or_warrant_price, rent_price)
+                for page in range(2, total_pages + 1)
+            ]
+            results = await asyncio.gather(*tasks)
+            for idx, page_data in enumerate(results):
+                page_articles = page_data.get("articleList", [])
+                print(f'********** 매물 개수: [{dong_name} / 전체 {total_pages}페이지 중 {idx + 2}번째] 매물 {len(page_articles)}건 수집됨 **********')
+                all_articles.extend(page_articles)
+
+        else:  # map_count가 없으면 while True 루프로 순차 처리
+            print('[WARN] mapExposedCount 없음 > 순차 요청으로 전환')
+            page = 2
+            while True:
+                page_data = await fetch_page(session, page, dong_code, real_estate_type_code, trade_type_code, deal_or_warrant_price, rent_price)
+                page_articles = page_data.get("articleList", [])
+                print(f'********** 매물 개수: [{dong_name} / p{page}] 매물 {len(page_articles)}건 수집됨 **********')
+                if not page_articles:
+                    break
+                all_articles.extend(page_articles)
+
+                if not page_data.get("isMoreData", False): # 더 이상의 페이지가 없으면 종료
+                    break
+                page += 1
+                await asyncio.sleep(0.05) # API 과부하 방지
+
+    print(f'[DONE] 최종 수집된 매물 수: {len(all_articles)}')
+
 
     # 단지 정보 캐시
     v_complex_cache = {}
     a_complex_cache = {}
 
-    page = 1
-    while True:
-        url = (
-            f'https://new.land.naver.com/api/articles'
-            f'?cortarNo={dong_code}'
-            f'&order=rank'
-            f'&realEstateType={real_estate_type_code}'  # 아파트/오피스텔/빌라/원룸-투룸
-            f'&tradeType={trade_type_code}'  # 매매/전세/월세
-            f'&tag=%3A%3A%3A%3A%3A%3A%3A%3A'
-            f'&rentPriceMin=0&rentPriceMax={rent_price}'  # 900000000
-            f'&priceMin=0&priceMax={deal_or_warrant_price}'
-            f'&areaMin=0&areaMax=900000000'
-            f'&priceType=RETAIL'
-            f'&showArticle=false'
-            f'&sameAddressGroup=false'
-            f'&page={page}'
-        )
-        data = await fetch_json(session, url)
-        articles = data.get('articleList', [])
-        if not articles:
-            break
+    all_details = []
 
-        print(f'********** 매물 개수: [{dong_name} / p{page}] 매물 {len(articles)}건 수집됨 **********')
-        total_articles += len(articles)
-        print(f'********** 총 매물 개수: {total_articles} **********')
+    # 3. BATCH_SIZE 단위로 handle_article 처리
+    for i in range(0, len(all_articles), BATCH_SIZE):
+        batch = all_articles[i:i+BATCH_SIZE]
+        tasks = [
+            handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
+            for article in batch
+        ]
+        results = await asyncio.gather(*tasks) # n번째 배치의 결과가 담긴다.
+        all_details.extend(results) # 모든 결과가 누적되어 쌓인다.
 
-        # 병렬 처리: BATCH_SIZE씩 묶어서 처리
-        for i in range(0, len(articles), BATCH_SIZE):
-            batch = articles[i:i+BATCH_SIZE]
-            tasks = [
-                handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
-                for article in batch
-            ]
-            results = await asyncio.gather(*tasks) # n번째 배치의 결과가 담긴다.
-            all_details.extend(results) # 모든 결과가 누적되어 쌓인다.
 
-        if not data.get("isMoreData", False):  # 더 이상의 페이지가 없으면 종료
-            break
-        page += 1
-        await asyncio.sleep(0.05) # API 과부하 방지
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    json_file_subject = f'output/detail_data_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
 
-    # 마지막에 한 번에 저장   
+    # 4. 마지막에 한 번에 저장
     os.makedirs('output', exist_ok=True)
     async with aiofiles.open(json_file_subject, 'w', encoding='utf-8') as f:
         await f.write(json.dumps(all_details, ensure_ascii=False, indent=2))
