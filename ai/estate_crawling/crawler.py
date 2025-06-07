@@ -16,9 +16,9 @@ with open('secrets/headers.json', 'r', encoding='utf-8') as f:
 with open('secrets/cookies.json', 'r', encoding='utf-8') as f:
     COOKIES = json.load(f)
 
-semaphore = asyncio.Semaphore(30)
-BATCH_SIZE = 50  # 매물 병렬 처리 단위
-
+semaphore = asyncio.Semaphore(50)
+BATCH_SIZE = 30  # 매물 병렬 처리 단위
+PAGE_CHUNK_SIZE = 25 # 페이지 병렬 처리 단위
 
 async def fetch_json(session: ClientSession, url: str) -> dict:
     try:
@@ -150,21 +150,25 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
 
     # 2
     is_next = first_page_data.get('isMoreData')
-    if is_next: # 1페이지가 끝이 아니라 2페이지도 존재하면
 
+    if is_next: # 2페이지도 존재하면
         if map_count:  # map_count가 있으면 병렬 처리
             total_pages = math.ceil(map_count / len(first_articles)) # len(first_articles)는 네이버 부동산 1페이지당 매물 수
             print(f'[INFO] 총 매물 수: {map_count}, 총 페이지 수: {total_pages}')
 
-            tasks = [
-                fetch_page(session, page, dong_code, real_estate_type_code, trade_type_code, deal_or_warrant_price, rent_price)
-                for page in range(2, total_pages + 1)
-            ]
-            results = await asyncio.gather(*tasks)
-            for idx, page_data in enumerate(results):
-                page_articles = page_data.get("articleList", [])
-                print(f'********** 매물 개수: [{dong_name} / 전체 {total_pages}페이지 중 {idx + 2}번째] 매물 {len(page_articles)}건 수집됨 **********')
-                all_articles.extend(page_articles)
+            page_numbers = list(range(2, total_pages + 1))
+            for i in range(0, len(page_numbers), PAGE_CHUNK_SIZE):
+                chunk = page_numbers[i:i + PAGE_CHUNK_SIZE]  # 2~51, 52~101
+                tasks = [
+                    fetch_page(session, page, dong_code, real_estate_type_code, trade_type_code, deal_or_warrant_price, rent_price)
+                    for page in chunk
+                ]
+                results = await asyncio.gather(*tasks)
+
+                for idx, page_data in enumerate(results):
+                    page_articles = page_data.get("articleList", [])
+                    print(f'********** 매물 개수: [{dong_name} / 전체 {total_pages}페이지 중 {chunk[idx]}번째] 매물 {len(page_articles)}건 수집됨 **********')
+                    all_articles.extend(page_articles)
 
         else:  # map_count가 없으면 while True 루프로 순차 처리
             print('[WARN] mapExposedCount 없음 > 순차 요청으로 전환')
@@ -191,7 +195,7 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
 
     all_details = []
 
-    # 3. BATCH_SIZE 단위로 handle_article 처리
+
     for i in range(0, len(all_articles), BATCH_SIZE):
         batch = all_articles[i:i+BATCH_SIZE]
         tasks = [
