@@ -14,8 +14,8 @@ with open('secrets/headers.json', 'r', encoding='utf-8') as f:
 with open('secrets/cookies.json', 'r', encoding='utf-8') as f:
     COOKIES = json.load(f)
 
+BATCH_SIZE = 20  # 매물 병렬 처리 단위
 semaphore = asyncio.Semaphore(10)
-
 
 async def fetch_json(session: ClientSession, url: str) -> dict:
     try:
@@ -148,10 +148,15 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
         total_articles += len(articles)
         print(f'********** 총 매물 개수: {total_articles} **********')
 
-        tasks = [
-            handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache) for article in articles
-        ]
-        all_details = await asyncio.gather(*tasks)
+        # 병렬 처리: BATCH_SIZE씩 묶어서 처리
+        for i in range(0, len(articles), BATCH_SIZE):
+            batch = articles[i:i+BATCH_SIZE]
+            tasks = [
+                handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
+                for article in batch
+            ]
+            results = await asyncio.gather(*tasks) # n번째 배치의 결과가 담긴다.
+            all_details.extend(results) # 모든 결과가 누적되어 쌓인다.
 
     # 마지막에 한 번에 저장   
     os.makedirs('output', exist_ok=True)
