@@ -7,7 +7,6 @@ import nest_asyncio
 import streamlit as st
 from crawler import main  # 만든 async 크롤러 함수
 
-
 MAX_PREVIEW_SIZE = 5000  # 최대 미리보기 글자 수
 nest_asyncio.apply()
 st.title('🏙️ 네이버 부동산 매물 크롤러')
@@ -96,14 +95,16 @@ if st.button('매물 가져오기'):
     loop = asyncio.get_event_loop()
     file_path = loop.run_until_complete(main(search_condition))
 
-    elapsed = time.time() - start  # 경과 시간 계산
- 
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    st.success('✔️ 완료! 아래에서 결과 파일 내용을 확인할 수 있어요.')
-    if len(content) > MAX_PREVIEW_SIZE:
-        st.text_area('📂 결과 일부 미리보기', f'{content[:MAX_PREVIEW_SIZE]}\n... (생략됨)', height=400)
+    if not file_path:  # 매물 없어서 [] 리턴된 경우
+        st.warning('📭 선택한 조건에 맞는 매물이 없어요!')
     else:
-        st.text_area('📂 저장된 결과', content, height=400)
-    st.info(f'⏱️ 처리 시간: {elapsed:.2f}초')
+        elapsed = time.time() - start  # 경과 시간 계산
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        st.success('✔️ 완료! 아래에서 결과 파일 내용을 확인할 수 있어요.')
+        if len(content) > MAX_PREVIEW_SIZE:
+            st.text_area('📂 결과 일부 미리보기', f'{content[:MAX_PREVIEW_SIZE]}\n... (생략됨)', height=400)
+        else:
+            st.text_area('📂 저장된 결과', content, height=400)
+        st.info(f'⏱️ 처리 시간: {elapsed:.2f}초')
