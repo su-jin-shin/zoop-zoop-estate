@@ -20,6 +20,9 @@ semaphore = asyncio.Semaphore(500)
 BATCH_SIZE = 20 # 매물 병렬 처리 단위
 PAGE_CHUNK_SIZE = 50 # 페이지 병렬 처리 단위
 
+MAX_RETRY = 3 # 최대 시도 수
+failed_articles = []  # 실패한 article 기록용
+
 async def fetch_json(session: ClientSession, url: str) -> dict:
     try:
         async with semaphore:
@@ -126,6 +129,23 @@ async def handle_article(article, session, dong_code, real_estate_type_code, v_c
     return article
 
 
+async def handle_article_with_retry(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache):
+    article_no = article.get('articleNo')
+    for attempt in range(1, MAX_RETRY + 1):
+        try:
+            result = await handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
+            if result:
+                return result
+        except Exception as e:
+            print(f'[RETRY-{attempt}] article {article_no}, 에러: {e}')
+        await asyncio.sleep(0.3 * attempt)  # 점점 늘어나는 대기
+
+    # 재시도 실패 시 기록
+    print(f'[FAIL] article {article_no} 재시도 실패')
+    failed_articles.append(article_no)
+    return None
+
+
 async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     dong_code = cond['dong']['code']
     dong_name = cond['dong']['name']
@@ -157,7 +177,7 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     # 1페이지 매물 상세 호출
     for article_batch in chunked(first_articles, BATCH_SIZE):
         first_tasks = [
-            handle_article(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
+            handle_article_with_retry(article, session, dong_code, real_estate_type_code, v_complex_cache, a_complex_cache)
             for article in article_batch
         ]
         first_results = await asyncio.gather(*first_tasks)
@@ -192,7 +212,7 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
                     # 페이지별로 매물 상세 호출 (BATCH_SIZE 단위로 나눠서 비동기 요청 처리)
                     for article_batch in chunked(page_articles, BATCH_SIZE):
                         detail_tasks = [
-                            handle_article(article, session, dong_code, real_estate_type_code,
+                            handle_article_with_retry(article, session, dong_code, real_estate_type_code,
                                            v_complex_cache, a_complex_cache)
                             for article in article_batch
                         ]
@@ -223,7 +243,7 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
                 # 페이지별로 매물 상세 호출 (BATCH_SIZE 단위로 나눠서 비동기 요청 처리)
                 for article_batch in chunked(page_articles, BATCH_SIZE):
                     detail_tasks = [
-                        handle_article(article, session, dong_code, real_estate_type_code,
+                        handle_article_with_retry(article, session, dong_code, real_estate_type_code,
                                        v_complex_cache, a_complex_cache)
                         for article in article_batch
                     ]
@@ -239,19 +259,27 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
 
     print(f'[DONE] 최종 수집된 상세 매물 수: {len(all_details_with_page)}')
 
-
     # 페이지 번호 기준 정렬 후 상세 데이터만 추출
     sorted_details = [detail for _, detail in sorted(all_details_with_page, key=lambda x: x[0])]
 
+
+    # 마지막에 한 번에 저장
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     json_file_subject = f'output/detail_data_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
 
-    # 마지막에 한 번에 저장
+    # 성공한 매물 저장
     os.makedirs('output', exist_ok=True)
     async with aiofiles.open(json_file_subject, 'w', encoding='utf-8') as f:
         await f.write(json.dumps(sorted_details, ensure_ascii=False, indent=2))
-
     print(f'[DONE] 저장 완료: {json_file_subject}')
+
+    # 실패한 매물 저장
+    if failed_articles:
+        failed_path = f'output/failed_articles_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
+        async with aiofiles.open(failed_path, 'w', encoding='utf-8') as f:
+            await f.write(json.dumps(failed_articles, ensure_ascii=False, indent=2))
+        print(f'[WARN] 실패한 매물 {len(failed_articles)}건 저장됨: {failed_path}')
+
     return json_file_subject
 
 

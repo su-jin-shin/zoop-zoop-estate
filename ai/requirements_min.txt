@@ -1,4 +1,5 @@
 aiofiles==24.1.0
 aiohttp==3.12.9
+more_itertools==10.7.0
 nest_asyncio==1.6.0
 streamlit==1.45.1
