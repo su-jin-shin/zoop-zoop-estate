@@ -2,7 +2,7 @@
 	"property_id" 	BIGINT 	PRIMARY KEY,
 	"realty_id"	BIGINT		NULL,
 	"complex_id"	BIGINT		NULL,
-	"article_no"	VARCHAR		NOT NULL,   -- UNIQUE 키!!!!!!
+	"article_no"	VARCHAR		NOT NULL,
 	"article_name"	VARCHAR		NULL,
 	"apt_name"	VARCHAR		NULL,
 	"building_name"	VARCHAR		NULL,
@@ -21,8 +21,8 @@
 	"bathroom_count"	VARCHAR		NULL,
 	"move_in_type_name"	VARCHAR		NULL,
 	"move_in_possible_ymd"	VARCHAR		NULL,
-	"article_feature_description"	VARCHAR		NULL,
-	"detail_description"	VARCHAR		NULL,
+	"article_feature_description"	TEXT		NULL,
+	"detail_description"	TEXT		NULL,
 	"parking_possible_yn"	VARCHAR		NULL,
 	"principal_use"	VARCHAR		NULL,
 	"main_purps_cd_nm"	VARCHAR		NULL,
@@ -31,7 +31,7 @@
 	"area1"	VARCHAR		NULL,
 	"area2"	VARCHAR		NULL,
 	"direction"	VARCHAR		NULL,
-	"article_feature_desc"	VARCHAR		NULL,
+	"article_feature_desc"	TEXT		NULL,
 	"same_addr_max_prc"	VARCHAR		NULL,
 	"same_addr_min_prc"	VARCHAR		NULL,
 	"direction_base_type_name"	VARCHAR		NULL,
@@ -68,8 +68,8 @@
 
 CREATE TABLE "realty" (
 	"realty_id" 	 	BIGINT	PRIMARY KEY,
-	"realty_login_id" 	 	VARCHAR		NULL,
-	"establish_registration_no"	VARCHAR		NULL,
+	"realtor_account_id" 	 	VARCHAR		NULL,
+	"establish_registration_no"	VARCHAR		NOT NULL,
 	"realtor_name"	VARCHAR		NULL,
 	"representative_name"	VARCHAR		NULL,
 	"address"	VARCHAR		NULL,
@@ -78,34 +78,37 @@ CREATE TABLE "realty" (
 	"deal_count"	BIGINT		NULL,
 	"lease_count"	BIGINT		NULL,
 	"rent_count"	BIGINT		NULL,
-	"max_broker_fee"	DECIMAL		NULL,
 	"broker_fee"	DECIMAL		NULL,
+	"max_broker_fee"	DECIMAL		NULL,
 	"created_at"	TIMESTAMP		DEFAULT NOW(),
 	"updated_at"	TIMESTAMP		DEFAULT NOW(),
-	"deleted_at"	TIMESTAMP		NULL
+	"deleted_at"	TIMESTAMP		NULL,
+	CONSTRAINT unique_establish_registration_no UNIQUE ("establish_registration_no")
 );
 
 -- 이미지 ENUM 타입 정의
 CREATE TYPE image_type_enum AS ENUM (
-  'STRUCTURE', 'PROPERTY', 'COMPLEX', 'REALTY'
+  'STRUCTURE', 'PROPERTY', 'COMPLEX'
 );
 
 CREATE TABLE "image" (
 	"image_id" 	 	BIGINT		PRIMARY KEY,
 	"property_id"	BIGINT		NULL,
 	"complex_id"	BIGINT		NULL,
-	"image_url"		VARCHAR		NULL,
+	"image_url"		TEXT			NULL,
 	"image_type"	image_type_enum		NULL,
 	"image_order"	BIGINT		NULL,
 	"is_main"		BOOLEAN		NULL,
 	"created_at"	TIMESTAMP		DEFAULT NOW(),
 	"updated_at"	TIMESTAMP		DEFAULT NOW(),
-	"deleted_at"	TIMESTAMP		NULL
+	"deleted_at"	TIMESTAMP		NULL,
+	CONSTRAINT property_unique_image UNIQUE ("property_id", "image_type", "image_order"),
+	CONSTRAINT complex_unique_image UNIQUE ("complex_id", "image_type", "image_order")
 );
 
 CREATE TABLE "complex" (
 	"complex_id" 	BIGINT		PRIMARY KEY,
-	"complex_no"	BIGINT		NOT NULL,
+	"complex_no"	VARCHAR		NOT NULL,
 	"complex_name"	VARCHAR		NULL,
 	"created_at"	TIMESTAMP		DEFAULT NOW(),
 	"updated_at"	TIMESTAMP		DEFAULT NOW(),
