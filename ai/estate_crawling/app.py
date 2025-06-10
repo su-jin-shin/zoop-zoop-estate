@@ -13,7 +13,7 @@ st.title('🏙️ 네이버 부동산 매물 크롤러')
 
 
 # 파일 불러오기
-with open('secrets/all_dong_list.json', 'r', encoding='utf-8') as f:
+with open('estate_crawling/secrets/all_dong_list.json', 'r', encoding='utf-8') as f:
     dong_list = json.load(f) 
 
 dong_options = [dong['fullCortarName'] for dong in dong_list]

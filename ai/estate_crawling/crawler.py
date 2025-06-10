@@ -3,17 +3,21 @@ import json
 import math
 import os
 from datetime import datetime
+from pathlib import Path
 
 import aiofiles
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout
+from insert_estate_data import insert_many_properties
 from more_itertools import chunked
 
+CURRENT_DIR = Path(__file__).resolve().parent
+
 # 헤더/쿠키
-with open('secrets/headers.json', 'r', encoding='utf-8') as f:
+with open(CURRENT_DIR / 'secrets/headers.json', 'r', encoding='utf-8') as f:
     HEADERS = json.load(f)
 
-with open('secrets/cookies.json', 'r', encoding='utf-8') as f:
+with open(CURRENT_DIR / 'secrets/cookies.json', 'r', encoding='utf-8') as f:
     COOKIES = json.load(f)
 
 semaphore = asyncio.Semaphore(500)
@@ -262,20 +266,24 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     # 페이지 번호 기준 정렬 후 상세 데이터만 추출
     sorted_details = [detail for _, detail in sorted(all_details_with_page, key=lambda x: x[0])]
 
+    # DB insert
+    asyncio.run(insert_many_properties(sorted_details, real_estate_type_code))
+
 
     # 마지막에 한 번에 저장
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    json_file_subject = f'output/detail_data_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
+    OUTPUT_DIR = CURRENT_DIR / 'output'
+    json_file_subject = f'{OUTPUT_DIR}/detail_data_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
 
     # 성공한 매물 저장
-    os.makedirs('output', exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     async with aiofiles.open(json_file_subject, 'w', encoding='utf-8') as f:
         await f.write(json.dumps(sorted_details, ensure_ascii=False, indent=2))
     print(f'[DONE] 저장 완료: {json_file_subject}')
 
     # 실패한 매물 저장
     if failed_articles:
-        failed_path = f'output/failed_articles_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
+        failed_path = f'{OUTPUT_DIR}/failed_articles_{timestamp}_{dong_name}_{trade_type_name}_{real_estate_type_name}.json'
         async with aiofiles.open(failed_path, 'w', encoding='utf-8') as f:
             await f.write(json.dumps(failed_articles, ensure_ascii=False, indent=2))
         print(f'[WARN] 실패한 매물 {len(failed_articles)}건 저장됨: {failed_path}')

@@ -3,3 +3,4 @@
 
 # PostgreSQL 데이터가 저장되는 디렉토리
 postgres-db/data/
+postgres-db/backup/
