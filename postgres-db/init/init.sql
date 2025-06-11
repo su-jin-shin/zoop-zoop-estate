@@ -116,6 +116,26 @@ CREATE TABLE "complex" (
 	CONSTRAINT unique_complex_no UNIQUE ("complex_no")
 );
 
+-- 지역 ENUM 타입 정의
+CREATE TYPE region_type_enum AS ENUM (
+  'city', 'dvsn', 'sec'
+);
+
+CREATE TABLE "region" (
+	"region_id" 	BIGINT		PRIMARY KEY,
+	"cortar_no"		VARCHAR		NOT NULL,
+	"cortar_name"	VARCHAR		NULL,
+	"cortar_type"	region_type_enum	NULL,
+	"parent_cortar_no"	VARCHAR		NULL,
+	"center_lat"		DOUBLE PRECISION		NULL,
+	"center_lon"	DOUBLE PRECISION		NULL,
+	"full_cortar_name"	VARCHAR	NULL,
+	"created_at"	TIMESTAMP		DEFAULT NOW(),
+	"updated_at"	TIMESTAMP		DEFAULT NOW(),
+	"deleted_at"	TIMESTAMP		NULL,
+	CONSTRAINT unique_cortar_no UNIQUE ("cortar_no")
+);
+
 ALTER TABLE property
 ALTER COLUMN property_id
 ADD GENERATED ALWAYS AS IDENTITY;
@@ -130,4 +150,8 @@ ADD GENERATED ALWAYS AS IDENTITY;
 
 ALTER TABLE complex
 ALTER COLUMN complex_id
+ADD GENERATED ALWAYS AS IDENTITY;
+
+ALTER TABLE region
+ALTER COLUMN region_id
 ADD GENERATED ALWAYS AS IDENTITY;
