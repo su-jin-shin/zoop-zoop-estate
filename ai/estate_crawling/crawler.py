@@ -165,6 +165,7 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
     v_complex_cache = {}
     a_complex_cache = {}
 
+    start = datetime.now()  # 크롤링 시작 시간
 
     # 1페이지 요청하여 총 매물 수 알아내기
     first_page_data = await fetch_page(session, 1, dong_code, real_estate_type_code, trade_type_code,
@@ -263,9 +264,14 @@ async def fetch_articles_by_dong(session: ClientSession, cond: dict):
 
     print(f'[DONE] 최종 수집된 상세 매물 수: {len(all_details_with_page)}')
 
+    # 크롤링 시간 측정
+    end = datetime.now()
+    duration = (end - start).total_seconds()
+    print(f'[TIME] 크롤링 시간: {duration:.2f}초')
+
+
     # 페이지 번호 기준 정렬 후 상세 데이터만 추출
     sorted_details = [detail for _, detail in sorted(all_details_with_page, key=lambda x: x[0])]
-
     # DB insert
     asyncio.run(insert_many_properties(sorted_details, real_estate_type_code))
 

@@ -1,10 +1,10 @@
 import json
+import os
 import sys
 from pathlib import Path
 
 import asyncpg
 from dotenv import load_dotenv
-import os
 
 # 모듈 import 기준 디렉토리 설정 (ai 폴더 기준)
 CURRENT_DIR = Path(__file__).resolve().parent
