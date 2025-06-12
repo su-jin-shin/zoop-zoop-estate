@@ -1,11 +1,14 @@
 package com.zoop.chat.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "chat_room")
+@Getter
 public class ChatRoom {
 
     @Id
@@ -13,11 +16,12 @@ public class ChatRoom {
     @Column
     private Long chatRoomId;
 
+    @Setter
     @Column
     private Long userId;
 
     @Column(columnDefinition = "TEXT")
-    private String title = "new chat";
+    private String title;
 
     @Column
     private LocalDateTime titleUpdatedAt;
@@ -36,6 +40,7 @@ public class ChatRoom {
 
     @PrePersist
     public void prePersist() {
+        if (title == null) title = "new chat";
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (lastMessageAt == null) lastMessageAt = LocalDateTime.now();
     }

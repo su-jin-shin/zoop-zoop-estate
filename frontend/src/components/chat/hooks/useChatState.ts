@@ -310,7 +310,7 @@ export const useChatState = () => {
     );
   };
 
-  const addBotMessageWithServerSync = async (text: string) => {
+  const addBotMessageWithServerSync = async (text: string, chatRoomId: number) => {
     const botMessage: Message = {
       id: messages.length + 1,
       text,
@@ -325,7 +325,7 @@ export const useChatState = () => {
         text,               // content
         0,                  // userId = 0 for chatbot
         false,              // isUser = false → senderType: "CHATBOT"
-        currentChat.chatRoomId
+        chatRoomId          // 서버에서 받은 chatRoomId 사용
       );
     } catch (err) {
       console.error("챗봇 메시지 전송 실패:", err);
@@ -358,6 +358,9 @@ export const useChatState = () => {
       true, 
       currentChat?.chatRoomId,
     );
+
+    // 서버 응답에서 chatRoomId 받기
+    const { chatRoomId } = response;
 
     // Add user message
     const newUserMessage: Message = {
@@ -427,7 +430,7 @@ export const useChatState = () => {
           // Get a random response from the chatResponses array
           const randomIndex = Math.floor(Math.random() * chatResponses.length);
           const randomResponse = chatResponses[randomIndex];   
-          await addBotMessageWithServerSync(randomResponse);
+          await addBotMessageWithServerSync(randomResponse, chatRoomId);
         })();
       }, 500);
     }

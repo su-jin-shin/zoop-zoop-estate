@@ -13,4 +13,6 @@ spring:
       naming: # 카멜 케이스를 스네이크 케이스로 자동 변환(컬럼명)
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
+    properties:
+      hibernate.format_sql: true # SQL 보기 좋게 줄바꿈하여 출력
     database-platform: org.hibernate.dialect.PostgreSQLDialect
