@@ -1,4 +1,29 @@
-﻿CREATE TABLE "property" (
+﻿CREATE TABLE "chat_room" (
+	"chat_room_id"	BIGINT	NOT NULL,
+	"user_id"		BIGINT	NULL,
+	"title" 		TEXT 		DEFAULT 'new chat',
+	"title_updated_at"		TIMESTAMP		NULL,
+	"created_at"		TIMESTAMP		DEFAULT NOW(),
+	"last_message_at" 	TIMESTAMP 	DEFAULT NOW(),
+	"is_deleted"		BOOLEAN		NOT NULL DEFAULT false,
+	"deleted_at"	TIMESTAMP		NULL
+);
+
+-- 메시지 발신인 ENUM 타입 정의
+CREATE TYPE sender_type_enum AS ENUM (
+  'USER', 'CHATBOT'
+);
+
+CREATE TABLE "message" (
+	"message_id"	BIGINT	NOT NULL,
+	"chat_room_id"	BIGINT	NOT NULL,
+	"sender_type"	sender_type_enum	NULL,
+	"content"		TEXT	NULL,
+	"created_at"	TIMESTAMP		DEFAULT NOW(),
+	"deleted_at"	TIMESTAMP		NULL
+);
+
+CREATE TABLE "property" (
 	"property_id" 	BIGINT 	PRIMARY KEY,
 	"realty_id"	BIGINT		NULL,
 	"complex_id"	BIGINT		NULL,
@@ -135,6 +160,14 @@ CREATE TABLE "region" (
 	"deleted_at"	TIMESTAMP		NULL,
 	CONSTRAINT unique_cortar_no UNIQUE ("cortar_no")
 );
+
+ALTER TABLE chat_room
+ALTER COLUMN chat_room_id
+ADD GENERATED ALWAYS AS IDENTITY;
+
+ALTER TABLE message
+ALTER COLUMN message_id
+ADD GENERATED ALWAYS AS IDENTITY;
 
 ALTER TABLE property
 ALTER COLUMN property_id
