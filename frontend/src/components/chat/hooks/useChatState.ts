@@ -10,6 +10,7 @@ import {
   chatResponses
 } from "../utils/messageUtils";
 import { toast } from "@/hooks/use-toast";
+import { sendMessageToServer } from "../ChatAPI";
 
 // Mock property data for recommendations - would come from API in real app
 const recommendedProperties = [
@@ -309,7 +310,29 @@ export const useChatState = () => {
     );
   };
 
-  const handleSendMessage = () => {
+  const addBotMessageWithServerSync = async (text: string) => {
+    const botMessage: Message = {
+      id: messages.length + 1,
+      text,
+      isUser: false,
+      timestamp: new Date(),
+    };
+  
+    addBotMessage(botMessage);
+  
+    try {
+      await sendMessageToServer(
+        text,               // content
+        0,                  // userId = 0 for chatbot
+        false,              // isUser = false → senderType: "CHATBOT"
+        currentChat.chatRoomId
+      );
+    } catch (err) {
+      console.error("챗봇 메시지 전송 실패:", err);
+    }
+  };
+  
+  const handleSendMessage = async () => {
     // For search input type, don't allow direct text submission
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.inputType === 'search' && !selectedOption) {
@@ -327,6 +350,15 @@ export const useChatState = () => {
       messageText = "건너뛰기";
     }
 
+    // 서버에 메시지 보내기
+    const currentChat = chatHistories.find(chat => chat.id === currentChatId);
+    const response = await sendMessageToServer(
+      messageText,
+      123, // 유저 ID (실제 로그인 유저 ID로 바꾸기)
+      true, 
+      currentChat?.chatRoomId,
+    );
+
     // Add user message
     const newUserMessage: Message = {
       id: messages.length + 1,
@@ -342,7 +374,8 @@ export const useChatState = () => {
           ...chat,
           messages: [...chat.messages, newUserMessage],
           // 제목은 이제 최종 검색 시점에만 변경됩니다
-          title: chat.title
+          title: chat.title,
+          chatRoomId: response.chatRoomId,
         };
       }
       return chat;
@@ -390,16 +423,12 @@ export const useChatState = () => {
     // If we're not in the filter flow, generate a random response from the array
     else if (preferences.step === -1) {
       setTimeout(() => {
-        // Get a random response from the chatResponses array
-        const randomIndex = Math.floor(Math.random() * chatResponses.length);
-        const randomResponse = chatResponses[randomIndex];
-        
-        addBotMessage({
-          id: messages.length + 2,
-          text: randomResponse,
-          isUser: false,
-          timestamp: new Date()
-        });
+        (async () => {
+          // Get a random response from the chatResponses array
+          const randomIndex = Math.floor(Math.random() * chatResponses.length);
+          const randomResponse = chatResponses[randomIndex];   
+          await addBotMessageWithServerSync(randomResponse);
+        })();
       }, 500);
     }
   };
@@ -453,6 +482,7 @@ export const useChatState = () => {
       title: "줍줍", // Default title for new chats remains "줍줍"
       messages: [initialMessage], // Modified: Now only includes the combined initialMessage
       timestamp: new Date(),
+      chatRoomId: undefined
     };
     
     setChatHistories([...chatHistories, newChat]);
@@ -506,5 +536,6 @@ export const useChatState = () => {
     startNewChat,
     switchToChat,
     handleBackButton,
+    addBotMessageWithServerSync,
   };
 };
