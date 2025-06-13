@@ -23,22 +23,27 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> sendMessage(@RequestBody MessageDto messageDto) {
-        Long chatRoomId = messageDto.getChatRoomId();
-        SenderType senderType = messageDto.getSenderType();
-        String content = messageDto.getContent();
+    public ResponseEntity<Map<String, Object>> sendMessage(@RequestBody MessageDto requestMessageDto) {
+        Long chatRoomId = requestMessageDto.getChatRoomId();
+        SenderType senderType = requestMessageDto.getSenderType();
+        String content = requestMessageDto.getContent();
 
         log.info("chatRoomId: {}, senderType: {}, content: {}", chatRoomId, senderType, content);
 
-        // 채팅방 생성
+        // 1. 채팅방 생성
         if (chatRoomId == null) {
-            chatRoomId = chatService.createChatRoom(messageDto.getUserId());
+            chatRoomId = chatService.createChatRoom(requestMessageDto.getUserId());
+            log.info("{}번 채팅방이 생성됨", chatRoomId);
+            requestMessageDto.setChatRoomId(chatRoomId);
         }
+
+        // 2. 메시지 저장
+        MessageDto responseMessageDto = chatService.saveMessage(requestMessageDto);
 
         return ResponseEntity.ok(Map.of(
                 "chatRoomId", chatRoomId,
-                "messageId", 0, // 임시의 값 return
-                "createdAt", LocalDateTime.now().toString() // 임시의 값 return
+                "messageId", responseMessageDto.getMessageId(),
+                "createdAt", responseMessageDto.getCreatedAt()
         ));
     }
 

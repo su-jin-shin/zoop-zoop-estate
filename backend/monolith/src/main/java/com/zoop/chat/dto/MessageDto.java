@@ -19,8 +19,9 @@ public class MessageDto {
     private SenderType senderType;
     private LocalDateTime createdAt;
 
-    public MessageDto(Long chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public MessageDto(Long messageId, LocalDateTime createdAt) {
+        this.messageId = messageId;
+        this.createdAt = createdAt;
     }
 
 }
