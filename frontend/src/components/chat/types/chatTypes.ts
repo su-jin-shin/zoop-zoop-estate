@@ -15,6 +15,7 @@ export type ChatHistory = {
   title: string;
   messages: Message[];
   timestamp: Date;
+  chatRoomId?: number;
 };
 
 export type PropertyPreferences = {
