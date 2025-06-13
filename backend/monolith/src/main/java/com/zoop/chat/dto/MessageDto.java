@@ -1,12 +1,14 @@
 package com.zoop.chat.dto;
 
 import com.zoop.chat.type.SenderType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MessageDto {
 
     private Long userId;
