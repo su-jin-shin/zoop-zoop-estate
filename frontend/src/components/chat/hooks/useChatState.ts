@@ -469,6 +469,7 @@ export const useChatState = () => {
     if (preferences.step === 0) {
       setPreferences(prev => ({ ...prev, location, step: 1 }));
     }
+    //setSelectedOption(location);
   };
 
   const handleStartFilter = () => {
@@ -479,17 +480,20 @@ export const useChatState = () => {
   };
 
   const startNewChat = () => {
-    const newChatId = chatHistories.length + 1;
+    const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
     const newChat: ChatHistory = {
       id: newChatId,
-      title: "줍줍", // Default title for new chats remains "줍줍"
-      messages: [initialMessage], // Modified: Now only includes the combined initialMessage
+      title: "줍줍",
+      messages: [initialMessage],
       timestamp: new Date(),
       chatRoomId: undefined
     };
     
-    setChatHistories([...chatHistories, newChat]);
+    //setChatHistories([...chatHistories, newChat]);
+    setChatHistories(prev => [...prev, newChat]);
     setCurrentChatId(newChatId);
+    
+    // 완전히 초기 상태로 리셋
     setPreferences({ step: -1 });
     setSelectedOption("");
     setInput("");
@@ -503,22 +507,132 @@ export const useChatState = () => {
     if (selectedChat) {
       // Determine the current step of the selected chat based on its messages
       let step = -1;
-      if (selectedChat.messages.some(m => m.id === locationQuestion.id)) step = 0;
-      if (selectedChat.messages.some(m => m.id === transactionQuestion.id)) step = 1;
-      if (selectedChat.messages.some(m => m.id === propertyQuestion.id)) step = 2;
-      if (selectedChat.messages.some(m => m.id === priceQuestion.id)) step = 3;
-      if (selectedChat.messages.some(m => m.text.includes("조건에 맞는 추천 매물"))) {
+      let newPreferences: PropertyPreferences = { step: -1 };
+      
+      // 선택된 채팅의 메시지들을 분석하여 현재 단계와 설정을 복원
+      const userMessages = selectedChat.messages.filter(m => m.isUser);
+      
+      if (selectedChat.messages.some(m => m.id === locationQuestion.id)) {
+        step = Math.max(step, 0);
+        const locationMsg = userMessages.find(m => 
+          selectedChat.messages.findIndex(msg => msg.id === locationQuestion.id) < 
+          selectedChat.messages.findIndex(msg => msg.id === m.id)
+        );
+        if (locationMsg) {
+          newPreferences.location = locationMsg.text;
+          step = 1;
+        }
+      }
+      
+      if (selectedChat.messages.some(m => m.id === transactionQuestion.id)) {
+        step = Math.max(step, 1);
+        const transactionMsg = userMessages.find(m => 
+          selectedChat.messages.findIndex(msg => msg.id === transactionQuestion.id) < 
+          selectedChat.messages.findIndex(msg => msg.id === m.id)
+        );
+        if (transactionMsg) {
+          newPreferences.transactionType = transactionMsg.text as '월세' | '전세' | '매매';
+          step = 2;
+        }
+      }
+      
+      if (selectedChat.messages.some(m => m.id === propertyQuestion.id)) {
+        step = Math.max(step, 2);
+        const propertyMsg = userMessages.find(m => 
+          selectedChat.messages.findIndex(msg => msg.id === propertyQuestion.id) < 
+          selectedChat.messages.findIndex(msg => msg.id === m.id)
+        );
+        if (propertyMsg) {
+          newPreferences.propertyType = propertyMsg.text as '원룸 / 투룸' | '빌라' | '오피스텔' | '아파트';
+          step = 3;
+        }
+      }
+      
+      if (selectedChat.messages.some(m => m.id === priceQuestion.id)) {
+        step = Math.max(step, 3);
+        const priceMsg = userMessages.find(m => 
+          selectedChat.messages.findIndex(msg => msg.id === priceQuestion.id) < 
+          selectedChat.messages.findIndex(msg => msg.id === m.id)
+        );
+        if (priceMsg) {
+          newPreferences.priceRange = priceMsg.text;
+          step = 4;
+        }
+      }
+      
+      if (selectedChat.messages.some(m => m.text.includes("조건에 맞는 추천 매물") || m.text.includes("조건에 맞는 매물을 찾아볼게요"))) {
         step = 5;
         setRecommendationShown(true);
-        setPropertiesShown(true);
+        setPropertiesShown(selectedChat.messages.some(m => m.text.includes("조건에 맞는 매물") && m.text.includes("개를 찾았습니다")));
       } else {
         setRecommendationShown(false);
         setPropertiesShown(false);
       }
       
-      setPreferences({ step });
+      newPreferences.step = step;
+      setPreferences(newPreferences);
       setInput("");
       setSelectedOption("");
+    }
+  };
+
+  const editChatTitle = (chatId: number, newTitle: string) => {
+    setChatHistories(prev => 
+      prev.map(chat => {
+        if (chat.id === chatId) {
+          return {
+            ...chat,
+            title: newTitle,
+          };
+        }
+        return chat;
+      })
+    );
+  };
+
+  const deleteChat = (chatId: number) => {
+    // If deleting the current chat, always create a new one
+    if (currentChatId === chatId) {
+      const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
+      const newChat: ChatHistory = {
+        id: newChatId,
+        title: "줍줍",
+        messages: [initialMessage],
+        timestamp: new Date(),
+      };
+      
+      // Remove the deleted chat and add the new chat
+      setChatHistories(prev => [...prev.filter(chat => chat.id !== chatId), newChat]);
+      setCurrentChatId(newChatId);
+      setPreferences({ step: -1 });
+      setSelectedOption("");
+      setInput("");
+      setRecommendationShown(false);
+      setPropertiesShown(false);
+      return;
+    }
+
+    // If deleting a chat that's not current, just remove it
+    setChatHistories(prev => prev.filter(chat => chat.id !== chatId));
+    
+    // If this was the last chat, create a new one
+    const remainingChats = chatHistories.filter(chat => chat.id !== chatId);
+    if (remainingChats.length === 0) {
+      const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
+      const newChat: ChatHistory = {
+        id: newChatId,
+        title: "줍줍",
+        messages: [initialMessage],
+        timestamp: new Date(),
+      };
+      
+      setChatHistories([newChat]);
+      setCurrentChatId(newChatId);
+      setPreferences({ step: -1 });
+      setSelectedOption("");
+      setInput("");
+      setRecommendationShown(false);
+      setPropertiesShown(false);
     }
   };
 
@@ -540,5 +654,7 @@ export const useChatState = () => {
     switchToChat,
     handleBackButton,
     addBotMessageWithServerSync,
+    editChatTitle,
+    deleteChat,
   };
 };

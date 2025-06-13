@@ -22,6 +22,8 @@ const ChatBot = () => {
     startNewChat,
     switchToChat,
     handleBackButton,
+    editChatTitle,
+    deleteChat,
   } = useChatState();
 
   return (
@@ -31,6 +33,8 @@ const ChatBot = () => {
         currentChatId={currentChatId}
         switchToChat={switchToChat}
         startNewChat={startNewChat}
+        editChatTitle={editChatTitle}
+        deleteChat={deleteChat}
       />
 
       <ChatMessagesList
