@@ -13,6 +13,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,11 +42,20 @@ public class ChatControllerTest {
         }
     }
 
+    // 9자리 나노초 > 7자리 나노초 출력으로 변환
+    private String getExpectedTime(LocalDateTime createdAt) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
+        return createdAt.format(formatter);
+    }
+
     @Test
-    void 채팅방_없으면_생성후_아이디_반환() throws Exception {
+    void 채팅방_없으면_생성하고_메시지를_저장한다() throws Exception {
         // given
         long userId = 123L;
         long generatedChatRoomId = 1L;
+        long messageId = 10L;
+        LocalDateTime createdAt = LocalDateTime.now();
+        String expectedTime = getExpectedTime(createdAt);
 
         MessageDto request = MessageDto.builder()
                 .chatRoomId(null)
@@ -51,7 +64,17 @@ public class ChatControllerTest {
                 .content("안녕하세요")
                 .build();
 
+        MessageDto response = MessageDto.builder()
+                .messageId(messageId)
+                .chatRoomId(generatedChatRoomId)
+                .userId(userId)
+                .senderType(SenderType.USER)
+                .content("안녕하세요")
+                .createdAt(createdAt)
+                .build();
+
         when(chatService.createChatRoom(userId)).thenReturn(generatedChatRoomId);
+        when(chatService.saveMessage(any(MessageDto.class))).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/chat")
@@ -59,24 +82,39 @@ public class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatRoomId").value(generatedChatRoomId))
-                .andExpect(jsonPath("$.messageId").value(0))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(jsonPath("$.messageId").value(messageId))
+                .andExpect(jsonPath("$.createdAt").value(expectedTime));
 
-        verify(chatService, times(1)).createChatRoom(userId); // chatService.createChatRoom(userId) 메서드가 정확히 1번 호출되었는지 검증
+        verify(chatService).createChatRoom(userId);
+        verify(chatService).saveMessage(any(MessageDto.class));
     }
 
     @Test
-    void 채팅방_이미_있으면_생성_하지_않는다() throws Exception {
+    void 채팅방_이미_있으면_메시지만_저장한다() throws Exception {
         // given
         long existingChatRoomId = 99L;
         long userId = 123L;
+        long messageId = 555L;
+        LocalDateTime createdAt = LocalDateTime.now();
+        String expectedTime = getExpectedTime(createdAt);
 
         MessageDto request = MessageDto.builder()
-                .chatRoomId(existingChatRoomId)  // 이미 채팅방 ID가 존재함
+                .chatRoomId(existingChatRoomId)
                 .userId(userId)
                 .senderType(SenderType.USER)
                 .content("이미 있는 방에서 보낸 메시지")
                 .build();
+
+        MessageDto response = MessageDto.builder()
+                .messageId(messageId)
+                .chatRoomId(existingChatRoomId)
+                .userId(userId)
+                .senderType(SenderType.USER)
+                .content("이미 있는 방에서 보낸 메시지")
+                .createdAt(createdAt)
+                .build();
+
+        when(chatService.saveMessage(any(MessageDto.class))).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/chat")
@@ -84,11 +122,14 @@ public class ChatControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chatRoomId").value(existingChatRoomId))
-                .andExpect(jsonPath("$.messageId").value(0))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(jsonPath("$.messageId").value(messageId))
+                .andExpect(jsonPath("$.createdAt").value(expectedTime));
 
         // createChatRoom은 호출되면 안 됨
         verify(chatService, never()).createChatRoom(anyLong());
+
+        // 메시지 저장은 호출돼야 함
+        verify(chatService).saveMessage(any(MessageDto.class));
     }
 
 }
