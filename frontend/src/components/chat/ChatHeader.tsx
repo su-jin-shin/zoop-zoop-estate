@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Menu, PenSquare, Pencil, Trash2 } from "lucide-react";
 import {
@@ -132,7 +131,7 @@ const ChatHeader = ({
     }
     setDeleteDialogOpen(false);
     setChatToDelete(null);
-    setDropdownOpen(false); // Close dropdown after deletion
+    setDropdownOpen(false);
   };
 
   const handleDeleteCancel = () => {
@@ -150,21 +149,30 @@ const ChatHeader = ({
 
   const handleChatSelect = (chatId: number) => {
     switchToChat(chatId);
-    setDropdownOpen(false); // Close dropdown after selecting a chat
+    setDropdownOpen(false);
   };
 
   // Sort filtered chat histories by ID in descending order (newest first)
   const sortedChatHistories = [...filteredChatHistories].sort((a, b) => b.id - a.id);
   
   return (
-    <div className="bg-real-blue text-white p-4 flex items-center">
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+    <div className="bg-real-blue text-white p-4 flex items-center relative">
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="text-white hover:bg-real-blue/90">
             <Menu className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-80 bg-white">
+        <DropdownMenuContent 
+          align="start" 
+          className="w-80 bg-white z-50"
+          sideOffset={8}
+          style={{
+            maxHeight: '400px',
+            overflowY: 'auto'
+          }}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
           <div className="flex items-center justify-between px-3 py-2 border-b">
             <span className="font-medium">대화 기록</span>
           </div>

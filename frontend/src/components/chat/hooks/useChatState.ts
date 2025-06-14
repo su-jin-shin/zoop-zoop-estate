@@ -57,6 +57,7 @@ export const useChatState = () => {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [recommendationShown, setRecommendationShown] = useState(false);
   const [propertiesShown, setPropertiesShown] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
   
   const currentChat = chatHistories.find(chat => chat.id === currentChatId) || chatHistories[0];
   const messages = currentChat.messages;
@@ -222,7 +223,8 @@ export const useChatState = () => {
         
         // Add the recommendations message
         addBotMessage({
-          id: messages.length + 3,
+          //id: messages.length + 3,
+          id: Date.now(), // 고유한 ID 사용
           text: recommendationsHTML,
           isUser: false,
           timestamp: new Date()
@@ -234,7 +236,7 @@ export const useChatState = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [recommendationShown, propertiesShown, messages.length]);
+  }, [recommendationShown, propertiesShown]);
 
   const showRecommendationSummary = () => {
     // Prevent duplicate messages
@@ -294,6 +296,9 @@ export const useChatState = () => {
         description: "조건에 맞는 매물을 찾고 있습니다.",
       });
     }, 1000);
+
+    // 추천 끝났으니 step을 -1로 전환
+    setPreferences(prev => ({ ...prev, step: -1 }));
   };
 
   const addBotMessage = (message: Message) => {
@@ -499,6 +504,7 @@ export const useChatState = () => {
     setInput("");
     setRecommendationShown(false);
     setPropertiesShown(false);
+    setShowMapView(false);
   };
 
   const switchToChat = (chatId: number) => {
@@ -573,6 +579,7 @@ export const useChatState = () => {
       setPreferences(newPreferences);
       setInput("");
       setSelectedOption("");
+      setShowMapView(false);
     }
   };
 
@@ -609,6 +616,7 @@ export const useChatState = () => {
       setInput("");
       setRecommendationShown(false);
       setPropertiesShown(false);
+      setShowMapView(false);
       return;
     }
 
@@ -633,6 +641,7 @@ export const useChatState = () => {
       setInput("");
       setRecommendationShown(false);
       setPropertiesShown(false);
+      setShowMapView(false);
     }
   };
 
@@ -646,7 +655,8 @@ export const useChatState = () => {
     preferences,
     selectedOption,
     setSelectedOption,
-    handleSendMessage,
+    showMapView,
+    setShowMapView,
     handleKeyDown,
     handleLocationSelect,
     handleStartFilter,
@@ -656,5 +666,6 @@ export const useChatState = () => {
     addBotMessageWithServerSync,
     editChatTitle,
     deleteChat,
+    handleSendMessage,
   };
 };

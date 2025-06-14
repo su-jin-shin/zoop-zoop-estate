@@ -4,7 +4,7 @@ import { Message } from "./types/chatTypes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 type ChatMessageProps = {
   message: Message;
@@ -14,11 +14,30 @@ type ChatMessageProps = {
 const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
   const navigate = useNavigate();
   const messageRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Memoize the message content to prevent unnecessary re-parsing
+  const messageContent = useMemo(() => message.text, [message.text]);
+  
+  // Memoize whether this message contains property items
+  const hasPropertyItems = useMemo(() => 
+    messageContent.includes('property-item'), 
+    [messageContent]
+  );
+
+  // Handle visibility animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Add click event listener for property items
   useEffect(() => {
     const messageElement = messageRef.current;
-    if (!messageElement) return;
+    if (!messageElement || !hasPropertyItems) return;
 
     const propertyItems = messageElement.querySelectorAll('.property-item');
     
@@ -39,13 +58,14 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
         item.removeEventListener('click', handlePropertyClick);
       });
     };
-  }, [message.text, navigate]);
+  }, [hasPropertyItems, navigate, messageContent]);
 
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 max-w-[80%]",
-        message.isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+        "flex items-start gap-2.5 max-w-[80%] transition-all duration-300",
+        message.isUser ? "ml-auto flex-row-reverse" : "mr-auto",
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
       )}
     >
       <div
@@ -67,8 +87,8 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
       >
         <div 
           className="text-sm"
-          dangerouslySetInnerHTML={{ __html: message.text }}
-        ></div>
+          dangerouslySetInnerHTML={{ __html: messageContent }}
+        />
         
         {message.buttonText && (
           <Button 

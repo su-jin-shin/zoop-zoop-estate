@@ -1,66 +1,39 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, X } from "lucide-react";
-import ChatBot from "./ChatBot";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { MessageCircle, ArrowLeft } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 /**
- * ChatBotToggle component that shows either a Dialog (desktop) or Drawer (mobile)
- * with the ChatBot component based on screen size.
+ * ChatBotToggle component that navigates to the chat page when clicked
+ * or goes back when on the chat page
  */
 const ChatBotToggle = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isOnChatPage = location.pathname === '/chat';
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+  const handleButtonClick = () => {
+    if (isOnChatPage) {
+      navigate(-1); // Go back to previous page
+    } else {
+      navigate('/chat'); // Go to chat page
+    }
   };
 
-  const renderTriggerButton = () => (
+  return (
     <div className="fixed bottom-6 right-4 z-50">
       <Button
         className="rounded-full w-14 h-14 shadow-lg bg-real-blue hover:bg-real-blue/90"
-        onClick={() => setIsOpen(true)}
+        onClick={handleButtonClick}
       >
-        {isOpen ? (
-          <X className="h-6 w-6" />
+        {isOnChatPage ? (
+          <ArrowLeft className="h-6 w-6" />
         ) : (
           <MessageCircle className="h-6 w-6" />
         )}
       </Button>
     </div>
-  );
-
-  // Render different containers based on screen size
-  if (isDesktop) {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        {renderTriggerButton()}
-        <DialogContent className="sm:max-w-2xl p-0 border-none h-[95vh] max-h-[95vh]">
-          <ChatBot />
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  return (
-    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-      {renderTriggerButton()}
-      <DrawerContent className="p-0 h-[95vh] max-h-[95vh]">
-        <ChatBot />
-      </DrawerContent>
-    </Drawer>
   );
 };
 
