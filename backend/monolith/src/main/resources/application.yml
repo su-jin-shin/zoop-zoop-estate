@@ -5,6 +5,7 @@ spring:
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   flyway:
+    enabled: true
     baseline-on-migrate: true # 기존 데이터가 있는 DB라도 그 상태를 기준으로 삼고 마이그레이션 시작
 
   jpa:
