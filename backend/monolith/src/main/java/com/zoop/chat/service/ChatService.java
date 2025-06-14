@@ -5,11 +5,17 @@ import com.zoop.chat.entity.ChatRoom;
 import com.zoop.chat.entity.Message;
 import com.zoop.chat.repository.ChatRoomRepository;
 import com.zoop.chat.repository.MessageRepository;
+import com.zoop.exception.chat.ChatDeleteFailedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatService {
 
     private final ChatRoomRepository chatRoomRepository;
@@ -32,6 +38,18 @@ public class ChatService {
         Message saved =  messageRepository.save(message);
 
         return new MessageDto(saved.getMessageId(), saved.getCreatedAt());
+    }
+    
+    // 채팅방 삭제 (소프트 삭제)
+    @Transactional
+    public void deleteChatRoom(Long chatRoomId) {
+        try {
+            chatRoomRepository.softDeleteChatRoom(chatRoomId, LocalDateTime.now());
+            messageRepository.softDeleteMessages(chatRoomId, LocalDateTime.now()); // 메시지도 소프트 삭제
+        } catch (Exception e) {
+            log.error("채팅방 삭제 중 오류 발생: {}", e.getMessage(), e);
+            throw new ChatDeleteFailedException("채팅방 삭제에 실패했습니다.");
+        }
     }
 
 }

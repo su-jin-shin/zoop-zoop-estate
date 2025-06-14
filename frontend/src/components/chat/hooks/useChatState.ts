@@ -597,7 +597,34 @@ export const useChatState = () => {
     );
   };
 
-  const deleteChat = (chatId: number) => {
+  const deleteChat = async (chatId: number) => {
+    const chatToDelete = chatHistories.find(chat => chat.id === chatId);
+
+    if (!chatToDelete?.chatRoomId) {
+      console.warn("chatRoomId가 존재하지 않아 삭제 실패");
+      return;
+    }
+
+    try {
+      
+      // 백엔드에 삭제 요청
+      await fetch(`http://localhost:8080/chat/${chatToDelete.chatRoomId}`, {
+        method: "DELETE",
+      });
+
+      // 화면에서도 제거
+      const updatedChats = chatHistories.filter(chat => chat.id !== chatId);
+      setChatHistories(updatedChats);
+
+      // 선택된 채팅방을 삭제한 경우 새로운 채팅 생성
+      if (currentChatId === chatId) {
+        startNewChat();
+      }
+
+    } catch (error) {
+      console.error("채팅방 삭제 실패:", error);
+    };
+
     // If deleting the current chat, always create a new one
     if (currentChatId === chatId) {
       const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
