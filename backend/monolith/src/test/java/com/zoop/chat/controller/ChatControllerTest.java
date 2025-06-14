@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.type.SenderType;
+import com.zoop.exception.chat.ChatDeleteFailedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,9 +16,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -130,6 +131,32 @@ public class ChatControllerTest {
 
         // 메시지 저장은 호출돼야 함
         verify(chatService).saveMessage(any(MessageDto.class));
+    }
+
+    @Test
+    void 채팅방_삭제_성공_시_204_No_Content를_반환한다() throws Exception {
+        // given
+        Long chatRoomId = 1L;
+
+        // when & then
+        mockMvc.perform(delete("/chat/{chatRoomId}", chatRoomId))
+                .andExpect(status().isNoContent());
+
+        verify(chatService).deleteChatRoom(chatRoomId);
+    }
+
+    @Test
+    void 채팅방_삭제_실패_시_500_에러를_반환한다() throws Exception {
+        // given
+        Long chatRoomId = 99L;
+
+        doThrow(new ChatDeleteFailedException("삭제 실패"))
+                .when(chatService).deleteChatRoom(chatRoomId);
+
+        // when & then
+        mockMvc.perform(delete("/chat/{chatRoomId}", chatRoomId))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("삭제 실패"));
     }
 
 }
