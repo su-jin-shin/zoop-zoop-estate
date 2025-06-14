@@ -1,11 +1,12 @@
-
-import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
+import React, { useState, useRef } from "react";
 import { Search, List, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import PropertyCard from "@/components/property/PropertyCard";
 import Map from "@/components/maps/Map";
+import { PropertyPreferences } from "./types/chatTypes";
+import { ChatMessagesListRef } from "./ChatMessagesList";
 
 // Mock properties for the map view
 const mapProperties = [
@@ -43,23 +44,45 @@ const mapProperties = [
   }
 ];
 
-const MapSearch = () => {
+type MapViewInChatProps = {
+  onBackToChat: () => void;
+  preferences: PropertyPreferences;
+  messagesContainerRef: React.RefObject<ChatMessagesListRef>;
+};
+
+const MapViewInChat = ({ onBackToChat, preferences, messagesContainerRef }: MapViewInChatProps) => {
   const [showList, setShowList] = useState(false);
 
+  const handleBackToChat = () => {
+    onBackToChat();
+  };
+
+  // Create search query based on preferences
+  const getSearchPlaceholder = () => {
+    let placeholder = "";
+    if (preferences.location) placeholder += preferences.location;
+    if (preferences.transactionType) placeholder += ` ${preferences.transactionType}`;
+    if (preferences.propertyType) placeholder += ` ${preferences.propertyType}`;
+    return placeholder || "지역, 지하철역, 학교 등 검색";
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      {/* Search bar for all views */}
-      <div className="bg-white py-2 sticky top-[50px] z-10 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4">
+    <div className="flex flex-col h-full">
+      {/* Search bar */}
+      <div className="bg-white py-2 border-b border-gray-200 flex-shrink-0">
+        <div className="px-4">
           <div className="bg-white rounded-full border border-gray-200 py-1 px-2 flex items-center">
-            <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 p-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full w-8 h-8 p-0"
+              onClick={handleBackToChat}
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <Input 
               type="text" 
-              placeholder="지역, 지하철역, 학교 등 검색"
+              placeholder={getSearchPlaceholder()}
               className="border-0 focus-visible:ring-0 flex-grow text-sm h-8 px-2" 
             />
             <Button size="sm" className="rounded-full h-7 w-7 p-0 bg-real-blue hover:bg-real-blue/90">
@@ -69,10 +92,11 @@ const MapSearch = () => {
         </div>
       </div>
       
-      <main className="flex-grow flex flex-col">
-        <div className="max-w-3xl mx-auto w-full px-4">
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-4 py-2 flex-shrink-0">
           {/* Map container */}
-          <div className="w-full h-[300px] md:h-[400px] relative">
+          <div className="w-full h-[200px] relative">
             <Map />
             
             <div className="absolute bottom-4 left-4 z-10">
@@ -86,25 +110,30 @@ const MapSearch = () => {
               </Button>
             </div>
           </div>
+        </div>
+        
+        {/* Property list - with ScrollArea */}
+        <div className="flex-1 flex flex-col bg-white mx-4 mb-6 rounded-lg border border-gray-200 overflow-hidden">
+          <div className="p-3 border-b flex-shrink-0 bg-white">
+            <h2 className="font-bold text-base">
+              {preferences.location ? `${preferences.location} ` : ''}
+              주변 매물 {mapProperties.length}개
+            </h2>
+          </div>
           
-          {/* Property list moved below the map for all screen sizes */}
-          <div className="bg-white overflow-auto rounded-lg border border-gray-200 mt-4">
-            <div className="p-3 border-b sticky top-0 bg-white z-10 flex items-center">
-              <h2 className="font-bold text-base">주변 매물 {mapProperties.length}개</h2>
-            </div>
-            
-            <div className="p-3 space-y-3">
+          <ScrollArea className="flex-1 p-3">
+            <div className="space-y-3 pb-4">
               {mapProperties.map((property) => (
                 <div key={property.id}>
                   <PropertyCard {...property} />
                 </div>
               ))}
             </div>
-          </div>
+          </ScrollArea>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
 
-export default MapSearch;
+export default MapViewInChat;

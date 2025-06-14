@@ -1,8 +1,7 @@
 
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Heart, Share, MapPin, Home, Ruler, Calendar } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/layout/Navbar";
@@ -42,20 +41,66 @@ const propertyData = {
 
 const PropertyDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isFavorite, setIsFavorite] = useState(false);
   const [mainImage, setMainImage] = useState(propertyData.images[0]);
+  const [showNavbar, setShowNavbar] = useState(false);
+
+  const handleBackButton = () => {
+    // navbar 상태 초기화
+    setShowNavbar(false);
+    
+    // 약간의 지연 후 네비게이션 실행 (부드러운 UX를 위해)
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
+    }, 100);
+  };
+
+  // navbar hover 상태 관리를 위한 개선된 함수들
+  const handleNavbarMouseEnter = () => {
+    setShowNavbar(true);
+  };
+
+  const handleNavbarMouseLeave = () => {
+    setShowNavbar(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Navbar />
+    <div className="min-h-screen bg-gray-50 pb-20 relative">
+      {/* Hover trigger area for navbar - 적당한 크기로 조정 */}
+      <div 
+        className="absolute top-0 left-0 w-full h-5 z-40"
+        onMouseEnter={handleNavbarMouseEnter}
+        onMouseLeave={handleNavbarMouseLeave}
+      />
+      
+      {/* Navbar with improved animation */}
+      <div 
+        className={`absolute top-0 left-0 w-full z-50 transition-all duration-200 ease-out ${
+          showNavbar ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-90'
+        }`}
+        onMouseEnter={handleNavbarMouseEnter}
+        onMouseLeave={handleNavbarMouseLeave}
+      >
+        <Navbar />
+      </div>
       
       <div className="container mx-auto px-6 py-6 max-w-3xl">
         <div className="mb-6">
-          <div className="flex items-center mb-4">
-            <Link to="/" className="flex items-center text-real-darkGray hover:text-real-blue mr-4">
+          {/* 돌아가기 버튼을 더 위쪽으로 이동하고 스타일 개선 */}
+          <div className="flex items-center mb-4 pt-2">
+            <button 
+              onClick={handleBackButton}
+              className="flex items-center text-real-darkGray hover:text-real-blue mr-4 transition-colors duration-200 bg-white/80 backdrop-blur-sm rounded-full px-3 py-2 shadow-sm hover:shadow-md"
+            >
               <ArrowLeft className="h-5 w-5 mr-1" />
-              <span className="text-sm">돌아가기</span>
-            </Link>
+              <span className="text-sm font-medium">돌아가기</span>
+            </button>
             <Badge variant="outline" className="mr-2">{propertyData.rentalType}</Badge>
             <Badge variant="outline">{propertyData.propertyType}</Badge>
             <div className="ml-auto flex space-x-2">
@@ -63,12 +108,12 @@ const PropertyDetail = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsFavorite(!isFavorite)}
-                className={`flex items-center ${isFavorite ? 'text-red-500' : 'text-real-darkGray'}`}
+                className={`flex items-center transition-colors duration-200 ${isFavorite ? 'text-red-500' : 'text-real-darkGray'}`}
               >
                 <Heart className={`h-4 w-4 mr-1 ${isFavorite ? 'fill-red-500' : ''}`} />
                 <span>관심</span>
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center text-real-darkGray">
+              <Button variant="outline" size="sm" className="flex items-center text-real-darkGray transition-colors duration-200">
                 <Share className="h-4 w-4 mr-1" />
                 <span>공유</span>
               </Button>
