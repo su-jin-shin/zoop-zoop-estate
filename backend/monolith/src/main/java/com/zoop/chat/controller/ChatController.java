@@ -1,5 +1,6 @@
 package com.zoop.chat.controller;
 
+import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.type.SenderType;
@@ -44,6 +45,16 @@ public class ChatController {
         ));
     }
 
+    // 채팅방 제목 수정
+    @PatchMapping("/{chatRoomId}")
+    public ResponseEntity<Void> updateChatRoomTitle(@PathVariable Long chatRoomId, @RequestBody ChatRoomDto chatRoomDto) {
+        String title = chatRoomDto.getTitle();
+        chatService.updateChatRoomTitle(chatRoomId, chatRoomDto.getTitle());
+        log.info("{}번 채팅방의 제목이 변경됨: {}", chatRoomId, title);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 채팅방 삭제
     @DeleteMapping("/{chatRoomId}")
     public ResponseEntity<Void> deleteChatRoom(@PathVariable Long chatRoomId) {
         chatService.deleteChatRoom(chatRoomId);

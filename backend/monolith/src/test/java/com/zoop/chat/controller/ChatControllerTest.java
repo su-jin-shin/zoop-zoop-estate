@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.type.SenderType;
-import com.zoop.exception.chat.ChatDeleteFailedException;
+import com.zoop.exception.chat.ChatServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -150,7 +150,7 @@ public class ChatControllerTest {
         // given
         Long chatRoomId = 99L;
 
-        doThrow(new ChatDeleteFailedException("삭제 실패"))
+        doThrow(new ChatServiceException("삭제 실패"))
                 .when(chatService).deleteChatRoom(chatRoomId);
 
         // when & then

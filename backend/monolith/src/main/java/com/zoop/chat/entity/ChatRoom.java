@@ -45,4 +45,9 @@ public class ChatRoom {
         if (lastMessageAt == null) lastMessageAt = LocalDateTime.now();
     }
 
+    public void updateTitle(String newTitle) {
+        this.title = newTitle;
+        this.titleUpdatedAt = LocalDateTime.now();
+    }
+
 }
