@@ -11,6 +11,7 @@ import {
 } from "../utils/messageUtils";
 import { toast } from "@/hooks/use-toast";
 import { sendMessageToServer } from "../ChatAPI";
+import { nanoid } from "nanoid";
 
 // Mock property data for recommendations - would come from API in real app
 const recommendedProperties = [
@@ -238,7 +239,7 @@ export const useChatState = () => {
     }
   }, [recommendationShown, propertiesShown]);
 
-  const showRecommendationSummary = () => {
+  const showRecommendationSummary = async() => {
     // Prevent duplicate messages
     if (recommendationShown) return;
     setRecommendationShown(true);
@@ -268,6 +269,19 @@ export const useChatState = () => {
     // Update chat title based on user preferences using the requested format without colon
     let deposit = preferences.depositAmount && preferences.transactionType === '월세' ? ` (보증금 ${preferences.depositAmount})` : '';
     const chatTitle = `${preferences.location} / ${preferences.transactionType} / ${preferences.propertyType} / ${preferences.priceRange}${deposit}`;
+    
+    const chatRoomId = currentChat.chatRoomId;
+    if (chatRoomId) {
+      try {
+        await fetch(`http://localhost:8080/chat/${chatRoomId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: chatTitle }),
+        });
+      } catch (error) {
+        console.error("채팅방 제목 변경 실패:", error);
+      }
+    }
     
     setChatHistories(prev => 
       prev.map(chat => {
@@ -321,6 +335,7 @@ export const useChatState = () => {
       text,
       isUser: false,
       timestamp: new Date(),
+      uniqueKey: nanoid(),
     };
   
     addBotMessage(botMessage);
@@ -373,6 +388,7 @@ export const useChatState = () => {
       text: messageText,
       isUser: true,
       timestamp: new Date(),
+      uniqueKey: nanoid(),
     };
 
     // Update the current chat with the new message
@@ -583,25 +599,50 @@ export const useChatState = () => {
     }
   };
 
-  const editChatTitle = (chatId: number, newTitle: string) => {
-    setChatHistories(prev => 
-      prev.map(chat => {
-        if (chat.id === chatId) {
-          return {
-            ...chat,
-            title: newTitle,
-          };
-        }
-        return chat;
-      })
-    );
+  const editChatTitle = async (chatId: number, newTitle: string) => {
+    const chat = chatHistories.find(chat => chat.id === chatId);
+    const chatRoomId = chat?.chatRoomId;
+
+    // chatRoomId가 없거나 초기 상태라면 서버 통신 없이 로컬 상태만 변경   
+    if (!chatRoomId || chat.title === "줍줍") {
+      setChatHistories(prev => 
+        prev.map(chat => {
+          if (chat.id === chatId) {
+            return {
+              ...chat,
+              title: newTitle,
+            };
+          }
+          return chat;
+        })
+      );
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/chat/${chatRoomId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),     
+      });
+
+      if (!response.ok) throw new Error("채팅방 제목 변경 실패");
+   
+      // 성공 시 로컬 상태도 갱신
+      setChatHistories(prev =>
+        prev.map(chat =>
+          chat.id === chatId ? { ...chat, title: newTitle } : chat
+        )
+      );
+    } catch (error) {
+      console.error("채팅방 제목 변경 실패:", error);
+    }
   };
 
   const deleteChat = async (chatId: number) => {
     const chatToDelete = chatHistories.find(chat => chat.id === chatId);
 
     if (!chatToDelete?.chatRoomId) {
-      console.warn("chatRoomId가 존재하지 않아 삭제 실패");
+      console.warn("chatRoomId가 존재하지 않아 채팅방 삭제 실패");
       return;
     }
 

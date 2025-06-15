@@ -97,9 +97,9 @@ const ChatMessagesList = forwardRef<ChatMessagesListRef, ChatMessagesListProps>(
         ref={containerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
       >
-        {messages.map((message) => (
+        {messages.map((message, idx) => (
           <ChatMessage 
-            key={`${message.id}-${message.timestamp.getTime()}`}
+            key={message.uniqueKey || `fallback-${message.id}-${idx}`}
             message={message} 
             onButtonClick={message.id === initialMessage.id ? handleStartFilter : undefined} 
           />

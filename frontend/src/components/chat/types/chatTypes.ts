@@ -8,6 +8,7 @@ export type Message = {
   inputType?: 'search' | 'select' | 'radio' | 'input' | 'button';
   searchOptions?: string[];
   buttonText?: string;
+  uniqueKey?: string;
 };
 
 export type ChatHistory = {
