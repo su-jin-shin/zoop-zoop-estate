@@ -1,9 +1,12 @@
 package com.zoop.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.type.SenderType;
+import com.zoop.constants.ErrorMessages;
+import com.zoop.exception.chat.ChatRoomNotFoundException;
 import com.zoop.exception.chat.ChatServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ChatController.class)
@@ -156,7 +158,58 @@ public class ChatControllerTest {
         // when & then
         mockMvc.perform(delete("/chat/{chatRoomId}", chatRoomId))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("삭제 실패"));
+                .andExpect(jsonPath("$.message").value("삭제 실패"));
     }
 
+    @Test
+    void 채팅방_제목_변경_성공_시_204_No_Content를_반환한다() throws Exception {
+        // given
+        Long chatRoomId = 1L;
+        String newTitle = "변경할 제목";
+
+        // when & then
+        mockMvc.perform(patch("/chat/{chatRoomId}", chatRoomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"" + newTitle + "\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(chatService).updateChatRoomTitle(chatRoomId, newTitle);
+    }
+    
+    @Test
+    void 채팅방_제목_변경_실패_시_500_Internal_Server_Error와_에러_메시지를_반환한다() throws Exception {
+        // given
+        Long chatRoomId = 1L;
+        String newTitle = "변경할 제목";
+
+        doThrow(new ChatServiceException("채팅방 제목 변경 실패", chatRoomId, new RuntimeException()))
+                .when(chatService).updateChatRoomTitle(chatRoomId, newTitle);
+
+        // when & then
+        mockMvc.perform(patch("/chat/{chatRoomId}", chatRoomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"" + newTitle + "\"}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("채팅방 제목 변경 실패. chatRoomId=" + chatRoomId));
+    }
+
+    @Test
+    void 존재하지_않는_채팅방의_제목을_변경하려는_경우_404_Not_Found와_에러_메시지를_반환한다() throws Exception {
+        // given
+        Long chatRoomId = 999L;
+        String newTitle = "변경할 제목";
+        String context = ErrorMessages.CHAT_UPDATE_TITLE_FAILED;
+
+        doThrow(new ChatRoomNotFoundException(chatRoomId, context))
+                .when(chatService).updateChatRoomTitle(chatRoomId, newTitle);
+
+        // when & then
+        mockMvc.perform(patch("/chat/{chatRoomId}", chatRoomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"" + newTitle + "\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value("[" + context + "] 존재하지 않는 채팅방입니다. chatRoomId=" + chatRoomId));
+    }
+    
 }
