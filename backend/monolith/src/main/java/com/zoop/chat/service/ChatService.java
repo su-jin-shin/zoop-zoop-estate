@@ -1,5 +1,6 @@
 package com.zoop.chat.service;
 
+import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.entity.ChatRoom;
 import com.zoop.chat.entity.Message;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +53,7 @@ public class ChatService {
             ChatRoom chatRoom = findByChatRoomId(messageDto.getChatRoomId(), ErrorMessages.CHAT_SAVE_MESSAGE_FAILED); // 채팅방의 존재 여부를 확인하여, 없으면 예외 발생 (EntityNotFoundException)
             Message message = new Message(chatRoom, messageDto.getSenderType(), messageDto.getContent());
             Message saved =  messageRepository.save(message);
+            chatRoom.updateLastMessageAt(saved.getCreatedAt()); // 채팅방의 마지막 메시지 발송 시각을 갱신
             return new MessageDto(saved.getMessageId(), saved.getCreatedAt());
         } catch (Exception e) {
             throw new ChatServiceException(ErrorMessages.CHAT_SAVE_MESSAGE_FAILED, messageDto.getChatRoomId(), e);
@@ -78,5 +82,25 @@ public class ChatService {
             throw new ChatServiceException(ErrorMessages.CHAT_DELETE_FAILED, chatRoomId, e);
         }
     }
+    
+    // 채팅방 목록 조회
+    public List<ChatRoomDto> getUserChatRooms(Long userId) {
+        List<ChatRoom> chatRooms = chatRoomRepository.findChatRoomsByUserId(userId);
 
+        List<ChatRoomDto> result = new ArrayList<>();
+        int order = 0;
+
+        for (ChatRoom c : chatRooms) {
+            result.add(
+                ChatRoomDto.builder()
+                        .order(++order)
+                        .chatRoomId(c.getChatRoomId())
+                        .title(c.getTitle())
+                        .lastMessageAt(c.getLastMessageAt())
+                        .build()
+            );
+        }
+        return result;
+    }
+    
 }

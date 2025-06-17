@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -60,6 +60,16 @@ public class ChatController {
         chatService.deleteChatRoom(chatRoomId);
         log.info("{}번 채팅방이 삭제됨", chatRoomId);
         return ResponseEntity.noContent().build();
+    }
+
+    // 채팅방 목록 조회
+    @GetMapping
+    public ResponseEntity<List<ChatRoomDto>> getUserChatRooms(@RequestParam Long userId) {
+        // TODO: 현재는 임시로 userId를 쿼리 파라미터로 받지만, 추후 JWT에서 추출하도록 수정 예정
+        List<ChatRoomDto> chatRooms = chatService.getUserChatRooms(userId);
+        log.info("[userId: {}]의 채팅방 목록 조회 - {}개", userId, chatRooms.size());
+        log.info("목록: {}", chatRooms);
+        return ResponseEntity.ok(chatRooms);
     }
 
 }

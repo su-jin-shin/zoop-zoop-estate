@@ -50,4 +50,8 @@ public class ChatRoom {
         this.titleUpdatedAt = LocalDateTime.now();
     }
 
+    public void updateLastMessageAt(LocalDateTime time) {
+        this.lastMessageAt = time;
+    }
+
 }
