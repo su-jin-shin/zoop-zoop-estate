@@ -9,9 +9,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class MessageDto {
 
-    private Long userId;
+    private int order;
     @Setter
     private Long chatRoomId;
     private Long messageId;
@@ -19,7 +20,13 @@ public class MessageDto {
     private SenderType senderType;
     private LocalDateTime createdAt;
 
-    public MessageDto(Long messageId, LocalDateTime createdAt) {
+    public MessageDto(Long chatRoomId, SenderType senderType, String aiReply) {
+        this.chatRoomId = chatRoomId;
+        this.senderType = senderType;
+        this.content = aiReply;
+    }
+
+    public void updateMessageInfo(Long messageId, LocalDateTime createdAt) {
         this.messageId = messageId;
         this.createdAt = createdAt;
     }

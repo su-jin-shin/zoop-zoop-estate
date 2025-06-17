@@ -42,7 +42,7 @@ export const propertyQuestion: Message = {
   text: "어떤 종류의 부동산을 찾고 계신가요?",
   isUser: false,
   timestamp: new Date(),
-  options: ["원룸 / 투룸", "빌라", "오피스텔", "아파트"],
+  options: ["원룸 ⦁ 투룸", "빌라", "오피스텔", "아파트"],
   inputType: 'radio',
 };
 

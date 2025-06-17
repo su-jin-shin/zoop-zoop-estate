@@ -26,6 +26,8 @@ type ChatHeaderProps = {
   startNewChat: () => void;
   editChatTitle?: (chatId: number, newTitle: string) => void;
   deleteChat?: (chatId: number) => void;
+  showMapView?: boolean;
+  setShowMapView?: (value: boolean) => void;
 };
 
 const ChatHeader = ({ 

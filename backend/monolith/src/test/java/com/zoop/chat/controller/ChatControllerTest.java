@@ -1,9 +1,9 @@
 package com.zoop.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
 import com.zoop.chat.service.ChatService;
+import com.zoop.chat.service.ChatUpdateService;
 import com.zoop.chat.type.SenderType;
 import com.zoop.constants.ErrorMessages;
 import com.zoop.exception.chat.ChatRoomNotFoundException;
@@ -35,6 +35,9 @@ public class ChatControllerTest {
     private ChatService chatService; // 등록한 mock
 
     @Autowired
+    private ChatUpdateService chatUpdateService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @TestConfiguration
@@ -42,6 +45,11 @@ public class ChatControllerTest {
         @Bean
         public ChatService chatService() {
             return mock(ChatService.class); // Mockito mock 직접 주입
+        }
+
+        @Bean
+        public ChatUpdateService chatUpdateService() {
+            return mock(ChatUpdateService.class);
         }
     }
 
@@ -62,7 +70,7 @@ public class ChatControllerTest {
 
         MessageDto request = MessageDto.builder()
                 .chatRoomId(null)
-                .userId(userId)
+//                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("안녕하세요")
                 .build();
@@ -70,7 +78,7 @@ public class ChatControllerTest {
         MessageDto response = MessageDto.builder()
                 .messageId(messageId)
                 .chatRoomId(generatedChatRoomId)
-                .userId(userId)
+//                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("안녕하세요")
                 .createdAt(createdAt)
@@ -103,7 +111,7 @@ public class ChatControllerTest {
 
         MessageDto request = MessageDto.builder()
                 .chatRoomId(existingChatRoomId)
-                .userId(userId)
+//                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("이미 있는 방에서 보낸 메시지")
                 .build();
@@ -111,7 +119,7 @@ public class ChatControllerTest {
         MessageDto response = MessageDto.builder()
                 .messageId(messageId)
                 .chatRoomId(existingChatRoomId)
-                .userId(userId)
+//                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("이미 있는 방에서 보낸 메시지")
                 .createdAt(createdAt)

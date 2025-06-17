@@ -6,6 +6,8 @@ import ChatMessagesList, { ChatMessagesListRef } from "./ChatMessagesList";
 import MapViewInChat from "./MapViewInChat";
 import { useChatState } from "./hooks/useChatState";
 import { useRef } from "react";
+import { useEffect } from "react";
+
 
 const ChatBot = () => {
   const {
@@ -46,6 +48,7 @@ const ChatBot = () => {
       }
     }, 100);
   };
+
 
   return (
     <Card className="flex flex-col h-full w-full max-w-full mx-auto shadow-lg border rounded-lg overflow-hidden">

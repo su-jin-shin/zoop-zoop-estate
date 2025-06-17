@@ -22,7 +22,7 @@ export type ChatHistory = {
 export type PropertyPreferences = {
   location?: string;
   transactionType?: '월세' | '전세' | '매매';
-  propertyType?: '원룸 / 투룸' | '빌라' | '오피스텔' | '아파트';
+  propertyType?: '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트';
   priceRange?: string;
   depositAmount?: string;
   step: number;

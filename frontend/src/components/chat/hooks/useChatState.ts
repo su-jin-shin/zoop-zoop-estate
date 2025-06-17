@@ -59,10 +59,26 @@ export const useChatState = () => {
   const [recommendationShown, setRecommendationShown] = useState(false);
   const [propertiesShown, setPropertiesShown] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
-  
+
   const currentChat = chatHistories.find(chat => chat.id === currentChatId) || chatHistories[0];
   const messages = currentChat.messages;
-  
+
+
+  const [selectedChatRoomId, setSelectedChatRoomId] = useState<number | null>(null);
+  useEffect(() => {
+    if (!selectedChatRoomId) return;
+  }, [selectedChatRoomId]);
+
+  const appendMessageToCurrentChat = (chatRoomId: number, message: Message) => {
+    setChatHistories(prev =>
+      prev.map(chat =>
+        chat.chatRoomId === chatRoomId
+          ? { ...chat, messages: [...chat.messages, message] }
+          : chat
+      )
+    );
+  };
+
   // Progress through the guided questions
   useEffect(() => {
     const currentMessages = currentChat.messages;
@@ -96,6 +112,7 @@ export const useChatState = () => {
       }
     }
   }, [preferences, currentChat.messages, recommendationShown]);
+  
 
   // Handle back button to go to previous step
   const handleBackButton = () => {
@@ -296,20 +313,20 @@ export const useChatState = () => {
     );
     
     // Add recommendation results message with the new wording
-    setTimeout(() => {
-      addBotMessage({
-        id: messages.length + 2,
-        text: "AI가 추천 매물을 검색 중입니다. 잠시만 기다려주세요!",
-        isUser: false,
-        timestamp: new Date()
-      });
+    // setTimeout(() => {
+    //   addBotMessage({
+    //     id: messages.length + 2,
+    //     text: "AI가 추천 매물을 검색 중입니다. 잠시만 기다려주세요!",
+    //     isUser: false,
+    //     timestamp: new Date()
+    //   });
       
-      // Show a toast notification
-      toast({
-        title: "매물 검색",
-        description: "조건에 맞는 매물을 찾고 있습니다.",
-      });
-    }, 1000);
+    //   // Show a toast notification
+    //   toast({
+    //     title: "매물 검색",
+    //     description: "조건에 맞는 매물을 찾고 있습니다.",
+    //   });
+    // }, 1000);
 
     // 추천 끝났으니 step을 -1로 전환
     setPreferences(prev => ({ ...prev, step: -1 }));
@@ -371,6 +388,7 @@ export const useChatState = () => {
     }
 
     // 서버에 메시지 보내기
+    // 1. 메시지 전송
     const currentChat = chatHistories.find(chat => chat.id === currentChatId);
     const response = await sendMessageToServer(
       messageText,
@@ -379,10 +397,26 @@ export const useChatState = () => {
       currentChat?.chatRoomId,
     );
 
-    // 서버 응답에서 chatRoomId 받기
+    // 2. 서버 응답에서 chatRoomId 받기
     const { chatRoomId } = response;
+    console.log("서버 응답 chatRoomId:", chatRoomId);
+    pollChatUpdates(chatRoomId);
+    
+    const res = await fetch(`http://localhost:8080/chat/${chatRoomId}/recent`); // 3. 최근 메시지 가져오기(가장 최근 챗봇 메시지)
+    const recentAi = await res.json();
+    console.log("AI 응답:", recentAi);
 
-    // Add user message
+    // 4-1. 메시지 객체 만들어서 추가(AI 메시지)
+    const aiMessage: Message = {
+      id: recentAi.messageId,
+      text: recentAi.content,
+      isUser: false,
+      timestamp: new Date(recentAi.createdAt),
+      uniqueKey: nanoid(),
+    };
+    updateCurrentChatMessages(chatRoomId, aiMessage);
+    
+    // 4-2. 메시지 객체 만들어서 추가(User 메시지)
     const newUserMessage: Message = {
       id: messages.length + 1,
       text: messageText,
@@ -390,13 +424,15 @@ export const useChatState = () => {
       timestamp: new Date(),
       uniqueKey: nanoid(),
     };
+    updateCurrentChatMessages(currentChatId, newUserMessage);
+
 
     // Update the current chat with the new message
     const updatedHistories = chatHistories.map(chat => {
       if (chat.id === currentChatId) {
         return {
           ...chat,
-          messages: [...chat.messages, newUserMessage],
+          messages: [...chat.messages, newUserMessage, aiMessage],
           // 제목은 이제 최종 검색 시점에만 변경됩니다
           title: chat.title,
           chatRoomId: response.chatRoomId,
@@ -408,6 +444,7 @@ export const useChatState = () => {
     setChatHistories(updatedHistories);
     setInput("");
     setSelectedOption("");
+
 
     // If we're in the filter flow, update preferences based on the current step
     if (preferences.step >= 0) {
@@ -422,7 +459,7 @@ export const useChatState = () => {
       } else if (preferences.step === 2) {
         setPreferences(prev => ({ 
           ...prev, 
-          propertyType: messageText as '원룸 / 투룸' | '빌라' | '오피스텔' | '아파트', 
+          propertyType: messageText as '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트', 
           step: 3 
         }));
       } else if (preferences.step === 3) {
@@ -445,16 +482,16 @@ export const useChatState = () => {
       }
     } 
     // If we're not in the filter flow, generate a random response from the array
-    else if (preferences.step === -1) {
-      setTimeout(() => {
-        (async () => {
-          // Get a random response from the chatResponses array
-          const randomIndex = Math.floor(Math.random() * chatResponses.length);
-          const randomResponse = chatResponses[randomIndex];   
-          await addBotMessageWithServerSync(randomResponse, chatRoomId);
-        })();
-      }, 500);
-    }
+    // else if (preferences.step === -1) {
+    //   setTimeout(() => {
+    //     (async () => {
+    //       // Get a random response from the chatResponses array
+    //       const randomIndex = Math.floor(Math.random() * chatResponses.length);
+    //       const randomResponse = chatResponses[randomIndex];   
+    //       await addBotMessageWithServerSync(randomResponse, chatRoomId);
+    //     })();
+    //   }, 500);
+    // }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -565,7 +602,7 @@ export const useChatState = () => {
           selectedChat.messages.findIndex(msg => msg.id === m.id)
         );
         if (propertyMsg) {
-          newPreferences.propertyType = propertyMsg.text as '원룸 / 투룸' | '빌라' | '오피스텔' | '아파트';
+          newPreferences.propertyType = propertyMsg.text as '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트';
           step = 3;
         }
       }
@@ -713,8 +750,70 @@ export const useChatState = () => {
     }
   };
 
+  const updateCurrentChatMessages = (chatRoomId: number, message: Message) => {
+    if (!message.text || message.text.trim() === "") return; // 빈 메시지 무시
+    if (!message.timestamp || isNaN(new Date(message.timestamp).getTime())) return; // 유효하지 않은 시간 무시
+    setChatHistories(prev =>
+      prev.map(chat =>
+        chat.chatRoomId === chatRoomId
+          ? { ...chat, messages: [...chat.messages, message] }
+          : chat
+      )
+    );
+  };
+
+  const [activePollingRoomId, setActivePollingRoomId] = useState<number | null>(null);
+
+  const pollChatUpdates = (chatRoomId: number) => {
+    if (!chatRoomId || activePollingRoomId === chatRoomId) {
+      return;
+    }
+
+    setActivePollingRoomId(chatRoomId); // 중복 방지용 상태 설정
+
+    const doPoll = () => {
+      fetch(`http://localhost:8080/chat/updates?chatRoomId=${chatRoomId}`)
+        .then(res => {
+          if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+          return res.json();
+        })
+        .then(newMessageDto => {
+          const newMessage: Message = {
+            id: newMessageDto.messageId,
+            text: newMessageDto.content,
+            isUser: newMessageDto.senderType === "USER",
+            timestamp: new Date(newMessageDto.createdAt),
+          };
+
+          if (newMessage.text?.trim()) {
+            updateCurrentChatMessages(chatRoomId, newMessage);
+          }
+
+          doPoll(); // 다음 요청(재귀 호출)
+        })
+        .catch(err => {
+          console.warn(`chatRoomId ${chatRoomId} 폴링 실패`, err.message);
+          setTimeout(() => doPoll(), 3000);
+        });
+    };
+
+    doPoll(); // 최초 호출
+  };
+
+  useEffect(() => {
+    const chat = chatHistories.find(c => c.id === currentChatId);
+    const chatRoomId = chat?.chatRoomId;
+
+    if (chatRoomId && activePollingRoomId !== chatRoomId) {
+      pollChatUpdates(chatRoomId); // 오직 최초 시작에만 호출
+    }
+  }, [currentChatId, chatHistories]);
+
   return {
+    appendMessageToCurrentChat,
     chatHistories,
+    selectedChatRoomId,
+    setSelectedChatRoomId,
     currentChatId,
     currentChat,
     messages,
