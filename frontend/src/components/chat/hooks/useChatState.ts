@@ -772,7 +772,7 @@ export const useChatState = () => {
     setActivePollingRoomId(chatRoomId); // 중복 방지용 상태 설정
 
     const doPoll = () => {
-      fetch(`http://localhost:8080/chat/updates?chatRoomId=${chatRoomId}`)
+      fetch(`http://localhost:8080/chat/${chatRoomId}/updates`)
         .then(res => {
           if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
           return res.json();

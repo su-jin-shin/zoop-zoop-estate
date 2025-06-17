@@ -96,8 +96,8 @@ public class ChatController {
 
     // 사용자의 질문에 대한 챗봇의 응답 전송
     // 롱-폴링(long polling) 방식으로 새 메시지가 생길 때까지 최대 20초 동안 연결을 유지
-    @GetMapping("/updates")
-    public DeferredResult<MessageDto> getChatUpdates(@RequestParam Long chatRoomId) {
+    @GetMapping("/{chatRoomId}/updates")
+    public DeferredResult<MessageDto> getChatUpdates(@PathVariable Long chatRoomId) {
         // 폴링 시작 로그
         log.info("[LongPoll] chatRoomId={} - 연결 시도", chatRoomId);
         DeferredResult<MessageDto> result = new DeferredResult<>(20000L); // 20초 동안 대기
