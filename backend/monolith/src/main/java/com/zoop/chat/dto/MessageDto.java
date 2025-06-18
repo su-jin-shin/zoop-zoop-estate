@@ -2,9 +2,11 @@ package com.zoop.chat.dto;
 
 import com.zoop.chat.type.SenderType;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Builder
 public class MessageDto {
 

@@ -14,5 +14,11 @@ public class MessageRequestDto {
     private Long chatRoomId;
     private String content;
     private SenderType senderType;
+    private FilterDto filters;
+
+    public void applyAiReply(String aiReply, SenderType senderType) {
+        this.content = aiReply;
+        this.senderType = senderType;
+    }
 
 }

@@ -1,9 +1,6 @@
 package com.zoop.chat.controller;
 
-import com.zoop.chat.dto.ChatRoomDto;
-import com.zoop.chat.dto.MessageDto;
-import com.zoop.chat.dto.MessageRequestDto;
-import com.zoop.chat.dto.MessageResponseDto;
+import com.zoop.chat.dto.*;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.service.ChatUpdateService;
 import com.zoop.chat.type.SenderType;
@@ -34,6 +31,7 @@ public class ChatController {
         Long chatRoomId = request.getChatRoomId();
         SenderType senderType = request.getSenderType();
         String content = request.getContent();
+        FilterDto filters = request.getFilters();
 
         log.info("chatRoomId: {}, senderType: {}, content: {}", chatRoomId, senderType, content);
 
@@ -46,8 +44,14 @@ public class ChatController {
 
         // 2. 메시지 저장
         MessageResponseDto response = chatService.saveMessage(request);
+
         // 3. AI 답변 호출
-        chatService.generateAndSaveAiResponse(chatRoomId, content);
+        if (filters == null) {
+            chatService.generateAndSaveAiResponse(request);
+        } else {
+            // 크롤링 로직 시작
+            log.info("filters: {}", filters);
+        }
 
         log.info("response: {}", response);
         return ResponseEntity.ok(response);

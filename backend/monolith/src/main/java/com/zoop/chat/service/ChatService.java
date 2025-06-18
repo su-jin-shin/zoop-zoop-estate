@@ -141,10 +141,14 @@ public class ChatService {
     }
 
     @Async
-    public void generateAndSaveAiResponse(Long chatRoomId, String userMessageContent) {
+    public void generateAndSaveAiResponse(MessageRequestDto request) {
+        String userMessageContent = request.getContent();
         //String aiReply = customAI.generateReply(userMessageContent); // AI 호출
+
         String aiReply = ++CHATBOT_MESSAGE_ORDER + ". ai의 답변입니다.";
-        MessageResponseDto aiMessage = saveMessage(new MessageRequestDto(chatRoomId, aiReply, SenderType.CHATBOT));
+        request.applyAiReply(aiReply, SenderType.CHATBOT);
+
+        MessageResponseDto aiMessage = saveMessage(request);
         log.info("ai의 답변 DB 저장 완료: {}", aiMessage);
         chatUpdateService.notifyNewMessage(aiMessage); // 롱폴링 응답 보내기
     }

@@ -282,7 +282,39 @@ export const useChatState = () => {
       isUser: false,
       timestamp: new Date()
     });
+
+    const filters = { 
+      regionName: preferences.location || "", 
+      regionCode: "1168010300", //임시로 임의의 동(개포동)번호를 하드코딩,
+      tradeTypeName: preferences.transactionType || "",
+      tradeTypeCode: preferences.transactionTypeCode || "",
+      realEstateTypeName: preferences.propertyType || "",
+      realEstateTypeCode: preferences.propertyTypeCode || "", 
+      dealOrWarrantPrc: preferences.transactionType === "월세"
+                          ? Number(preferences.depositAmount) || null
+                          : Number(preferences.priceRange) || null,
+      rentPrice: preferences.transactionType === "월세"? Number(preferences.priceRange) || null : null
+    };
+    console.log("추천 매물 요청 JSON:", filters);
+
     
+    const messagePayload = {
+      content: summary,
+      senderType: "CHATBOT",
+      filters,
+      ...(currentChat?.chatRoomId && { chatRoomId: currentChat.chatRoomId }), // chatRoomId 있으면만 포함
+    };  
+
+    try {
+      await fetch("http://localhost:8080/chat", {  
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messagePayload),
+      });
+    } catch (err) {
+      console.error("필터 요약 JSON 서버 전송 실패:", err);
+    }
+
     // Update chat title based on user preferences using the requested format without colon
     let deposit = preferences.depositAmount && preferences.transactionType === '월세' ? ` (보증금 ${preferences.depositAmount})` : '';
     const chatTitle = `${preferences.location} / ${preferences.transactionType} / ${preferences.propertyType} / ${preferences.priceRange}${deposit}`;
@@ -390,32 +422,37 @@ export const useChatState = () => {
     // 서버에 메시지 보내기
     // 1. 메시지 전송
     const currentChat = chatHistories.find(chat => chat.id === currentChatId);
-    const response = await sendMessageToServer(
-      messageText,
-      123, // 유저 ID (실제 로그인 유저 ID로 바꾸기)
-      true, 
-      currentChat?.chatRoomId,
-    );
+    let response = { chatRoomId: currentChat?.chatRoomId };
+    let aiMessage: Message | null = null;
 
-    // 2. 서버 응답에서 chatRoomId 받기
-    const { chatRoomId } = response;
-    console.log("서버 응답 chatRoomId:", chatRoomId);
-    pollChatUpdates(chatRoomId);
-    
-    const res = await fetch(`http://localhost:8080/chat/${chatRoomId}/recent`); // 3. 최근 메시지 가져오기(가장 최근 챗봇 메시지)
-    const recentAi = await res.json();
-    console.log("AI 응답:", recentAi);
+    if (preferences.step === -1) {
+      response = await sendMessageToServer(
+        messageText,
+        123, // 유저 ID (실제 로그인 유저 ID로 바꾸기)
+        true, 
+        currentChat?.chatRoomId,
+      );
 
-    // 4-1. 메시지 객체 만들어서 추가(AI 메시지)
-    const aiMessage: Message = {
-      id: recentAi.messageId,
-      text: recentAi.content,
-      isUser: false,
-      timestamp: new Date(recentAi.createdAt),
-      uniqueKey: nanoid(),
-    };
-    updateCurrentChatMessages(chatRoomId, aiMessage);
-    
+      // 2. 서버 응답에서 chatRoomId 받기
+      const { chatRoomId } = response;
+      console.log("서버 응답 chatRoomId:", chatRoomId);
+      pollChatUpdates(chatRoomId);
+      
+      const res = await fetch(`http://localhost:8080/chat/${chatRoomId}/recent`); // 3. 최근 메시지 가져오기(가장 최근 챗봇 메시지)
+      const recentAi = await res.json();
+      console.log("AI 응답:", recentAi);
+
+      // 4-1. 메시지 객체 만들어서 추가(AI 메시지)
+      aiMessage = {
+        id: recentAi.messageId,
+        text: recentAi.content,
+        isUser: false,
+        timestamp: new Date(recentAi.createdAt),
+        uniqueKey: nanoid(),
+      };
+      updateCurrentChatMessages(chatRoomId, aiMessage);
+    }
+ 
     // 4-2. 메시지 객체 만들어서 추가(User 메시지)
     const newUserMessage: Message = {
       id: messages.length + 1,
@@ -432,8 +469,11 @@ export const useChatState = () => {
       if (chat.id === currentChatId) {
         return {
           ...chat,
-          messages: [...chat.messages, newUserMessage, aiMessage],
-          // 제목은 이제 최종 검색 시점에만 변경됩니다
+          messages: [
+            ...chat.messages,
+            newUserMessage,
+            ...(aiMessage ? [aiMessage] : []),  // aiMessage가 있을 때만 추가
+          ],
           title: chat.title,
           chatRoomId: response.chatRoomId,
         };
@@ -446,6 +486,21 @@ export const useChatState = () => {
     setSelectedOption("");
 
 
+
+    const tradeTypeMap: Record<string, string> = {
+      '매매': 'A1',
+      '전세': 'B1',
+      '월세': 'B2',
+    };
+
+    const propertyTypeMap: Record<string, string> = {
+      '아파트': 'APT',
+      '오피스텔': 'OPST',
+      '빌라': 'VL:YR',
+      '원룸 ⦁ 투룸': 'DDDGG:DSD',
+    };
+
+
     // If we're in the filter flow, update preferences based on the current step
     if (preferences.step >= 0) {
       if (preferences.step === 0) {
@@ -454,12 +509,14 @@ export const useChatState = () => {
         setPreferences(prev => ({ 
           ...prev, 
           transactionType: messageText as '월세' | '전세' | '매매', 
+          transactionTypeCode: tradeTypeMap[messageText], 
           step: 2 
         }));
       } else if (preferences.step === 2) {
         setPreferences(prev => ({ 
           ...prev, 
           propertyType: messageText as '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트', 
+          propertyTypeCode: propertyTypeMap[messageText], 
           step: 3 
         }));
       } else if (preferences.step === 3) {
