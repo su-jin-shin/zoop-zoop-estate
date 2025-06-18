@@ -1,4 +1,3 @@
-
 import { Message } from "./types/chatTypes";
 import DefaultInput from "./inputs/DefaultInput";
 import LocationSearchInput from "./inputs/LocationSearchInput";
@@ -112,6 +111,11 @@ const InputControl = ({
       placeholder = "보증금을 입력하세요 (예: 1000)";
     }
     
+    // 마지막 질문인지 확인
+    // 월세의 경우: 보증금 질문(id 6)이 마지막
+    // 전세/매매의 경우: 가격 질문(id 5)이 마지막
+    const isLastQuestion = lastMessage.id === 6 || (lastMessage.id === 5 && transactionType !== '월세');
+    
     return (
       <TextInput
         input={input}
@@ -122,6 +126,7 @@ const InputControl = ({
         showSkip={showSkip}
         questionId={lastMessage.id} // Pass the question ID to the TextInput
         handleBackButton={handleBackButton} // Pass the back button handler to TextInput
+        isLastQuestion={isLastQuestion} // 마지막 질문 여부 전달
       />
     );
   }

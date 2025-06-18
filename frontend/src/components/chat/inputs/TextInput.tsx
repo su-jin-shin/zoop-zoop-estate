@@ -12,6 +12,7 @@ type TextInputProps = {
   showSkip?: boolean;
   questionId?: number;
   handleBackButton?: () => void;
+  isLastQuestion?: boolean; // 추가: 마지막 질문 여부
 };
 
 const TextInput = ({ 
@@ -22,7 +23,8 @@ const TextInput = ({
   placeholder = "금액을 입력하세요 (예: 5000)",
   showSkip = false,
   questionId,
-  handleBackButton
+  handleBackButton,
+  isLastQuestion = false // 기본값: false
 }: TextInputProps) => {
   // Determine if the button should be disabled
   // Only disable for price question (5), always enable for deposit question (6)
@@ -45,6 +47,14 @@ const TextInput = ({
     } else {
       setInput(e.target.value);
     }
+  };
+
+  // 버튼 텍스트 결정
+  const getButtonText = () => {
+    if (isLastQuestion) {
+      return "결과 확인하기";
+    }
+    return "다음";
   };
 
   return (
@@ -73,7 +83,7 @@ const TextInput = ({
               className="flex-1 bg-real-blue hover:bg-real-blue/90 text-xs"
               disabled={isButtonDisabled}
             >
-              다음
+              {getButtonText()}
             </Button>
           </>
         ) : (
@@ -92,7 +102,7 @@ const TextInput = ({
               className={`bg-real-blue hover:bg-real-blue/90 ${showSkip ? 'w-full' : 'w-full'}`}
               disabled={isButtonDisabled}
             >
-              다음 <ArrowRight className="h-4 w-4 ml-1" />
+              {getButtonText()} {!isLastQuestion && <ArrowRight className="h-4 w-4 ml-1" />}
             </Button>
           </>
         )}

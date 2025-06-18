@@ -21,7 +21,8 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
   
   // Memoize whether this message contains property items
   const hasPropertyItems = useMemo(() => 
-    messageContent.includes('property-item'), 
+    //messageContent.includes('property-item'), 
+    messageContent?.includes('property-item') ?? false, 
     [messageContent]
   );
 

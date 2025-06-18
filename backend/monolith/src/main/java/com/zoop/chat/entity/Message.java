@@ -31,9 +31,11 @@ public class Message {
     private ChatRoom chatRoom;
 
     @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Getter
     private SenderType senderType;
 
     @Column(columnDefinition = "TEXT")
+    @Getter
     private String content;
 
     @Column

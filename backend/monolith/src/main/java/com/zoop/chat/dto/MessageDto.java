@@ -1,27 +1,20 @@
 package com.zoop.chat.dto;
 
 import com.zoop.chat.type.SenderType;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class MessageDto {
 
-    private Long userId;
-    @Setter
+    private int order;
     private Long chatRoomId;
     private Long messageId;
     private String content;
     private SenderType senderType;
     private LocalDateTime createdAt;
-
-    public MessageDto(Long messageId, LocalDateTime createdAt) {
-        this.messageId = messageId;
-        this.createdAt = createdAt;
-    }
 
 }
