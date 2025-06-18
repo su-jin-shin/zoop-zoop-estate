@@ -39,7 +39,7 @@ public class ChatController {
 
         // 1. 채팅방 생성
         if (chatRoomId == null) {
-            chatRoomId = chatService.createChatRoom(userId);
+            chatRoomId = chatService.createChatRoom(userId, request.getTitle());
             log.info("{}번 채팅방이 생성됨", chatRoomId);
             request.setChatRoomId(chatRoomId);
         }

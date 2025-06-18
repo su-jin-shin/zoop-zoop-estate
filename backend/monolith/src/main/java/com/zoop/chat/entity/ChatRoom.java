@@ -20,6 +20,7 @@ public class ChatRoom {
     @Column
     private Long userId;
 
+    @Setter
     @Column(columnDefinition = "TEXT")
     private String title;
 

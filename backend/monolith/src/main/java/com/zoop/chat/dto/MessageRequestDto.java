@@ -12,6 +12,7 @@ public class MessageRequestDto {
 
     @Setter
     private Long chatRoomId;
+    private String title;
     private String content;
     private SenderType senderType;
     private FilterDto filters;

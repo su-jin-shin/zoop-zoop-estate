@@ -64,6 +64,7 @@ public class ChatControllerTest {
     void 채팅방_없으면_생성하고_메시지를_저장한다() throws Exception {
         // given
         long userId = 123L;
+        String title = "채팅방 제목";
         long generatedChatRoomId = 1L;
         long messageId = 10L;
         LocalDateTime createdAt = LocalDateTime.now();
@@ -72,6 +73,7 @@ public class ChatControllerTest {
         MessageRequestDto request = MessageRequestDto.builder()
                 .chatRoomId(null)
 //                .userId(userId)
+                .title(title)
                 .senderType(SenderType.USER)
                 .content("안녕하세요")
                 .build();
@@ -83,7 +85,7 @@ public class ChatControllerTest {
                 .createdAt(createdAt)
                 .build();
 
-        when(chatService.createChatRoom(userId)).thenReturn(generatedChatRoomId);
+        when(chatService.createChatRoom(userId, title)).thenReturn(generatedChatRoomId);
         when(chatService.saveMessage(any(MessageRequestDto.class))).thenReturn(response);
 
         // when & then
@@ -95,7 +97,7 @@ public class ChatControllerTest {
                 .andExpect(jsonPath("$.messageId").value(messageId))
                 .andExpect(jsonPath("$.createdAt").value(expectedTime));
 
-        verify(chatService).createChatRoom(userId);
+        verify(chatService).createChatRoom(userId, title);
         verify(chatService).saveMessage(any(MessageRequestDto.class));
     }
 
@@ -104,6 +106,7 @@ public class ChatControllerTest {
         // given
         long existingChatRoomId = 99L;
         long userId = 123L;
+        String title = "채팅방 제목";
         long messageId = 555L;
         LocalDateTime createdAt = LocalDateTime.now();
         String expectedTime = getExpectedTime(createdAt);
@@ -134,7 +137,7 @@ public class ChatControllerTest {
                 .andExpect(jsonPath("$.createdAt").value(expectedTime));
 
         // createChatRoom은 호출되면 안 됨
-        verify(chatService, never()).createChatRoom(anyLong());
+        verify(chatService, never()).createChatRoom(anyLong(), eq(title));
 
         // 메시지 저장은 호출돼야 함
         verify(chatService).saveMessage(any(MessageRequestDto.class));

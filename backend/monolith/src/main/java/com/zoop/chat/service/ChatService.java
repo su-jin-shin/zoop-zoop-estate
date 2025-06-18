@@ -33,10 +33,11 @@ public class ChatService {
 
     // 채팅방 생성
     @Transactional
-    public Long createChatRoom(Long userId) {
+    public Long createChatRoom(Long userId, String title) {
         try {
             ChatRoom chatRoom = new ChatRoom();
             chatRoom.setUserId(userId);
+            chatRoom.setTitle(title);
             ChatRoom saved =  chatRoomRepository.save(chatRoom);
             return saved.getChatRoomId();
         } catch (Exception e) {
