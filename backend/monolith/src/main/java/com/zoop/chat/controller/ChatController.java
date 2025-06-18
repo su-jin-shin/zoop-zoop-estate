@@ -2,6 +2,8 @@ package com.zoop.chat.controller;
 
 import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
+import com.zoop.chat.dto.MessageRequestDto;
+import com.zoop.chat.dto.MessageResponseDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.service.ChatUpdateService;
 import com.zoop.chat.type.SenderType;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/chat")
@@ -25,12 +26,14 @@ public class ChatController {
 
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> sendMessage(@RequestBody MessageDto requestMessageDto) {
+    public ResponseEntity<MessageResponseDto> sendMessage(@RequestBody MessageRequestDto request) {
+        log.info("request: {}", request);
+
         // TODO: 현재는 임시의 userId 값을 사용하지만, 추후 JWT에서 추출하도록 수정 예정
         Long userId = 123L;
-        Long chatRoomId = requestMessageDto.getChatRoomId();
-        SenderType senderType = requestMessageDto.getSenderType();
-        String content = requestMessageDto.getContent();
+        Long chatRoomId = request.getChatRoomId();
+        SenderType senderType = request.getSenderType();
+        String content = request.getContent();
 
         log.info("chatRoomId: {}, senderType: {}, content: {}", chatRoomId, senderType, content);
 
@@ -38,19 +41,16 @@ public class ChatController {
         if (chatRoomId == null) {
             chatRoomId = chatService.createChatRoom(userId);
             log.info("{}번 채팅방이 생성됨", chatRoomId);
-            requestMessageDto.setChatRoomId(chatRoomId);
+            request.setChatRoomId(chatRoomId);
         }
 
         // 2. 메시지 저장
-        MessageDto responseMessageDto = chatService.saveMessage(requestMessageDto);
+        MessageResponseDto response = chatService.saveMessage(request);
         // 3. AI 답변 호출
         chatService.generateAndSaveAiResponse(chatRoomId, content);
 
-        return ResponseEntity.ok(Map.of(
-                "chatRoomId", chatRoomId,
-                "messageId", responseMessageDto.getMessageId(),
-                "createdAt", responseMessageDto.getCreatedAt()
-        ));
+        log.info("response: {}", response);
+        return ResponseEntity.ok(response);
     }
 
     // 채팅방 제목 수정
@@ -97,10 +97,10 @@ public class ChatController {
     // 사용자의 질문에 대한 챗봇의 응답 전송
     // 롱-폴링(long polling) 방식으로 새 메시지가 생길 때까지 최대 20초 동안 연결을 유지
     @GetMapping("/{chatRoomId}/updates")
-    public DeferredResult<MessageDto> getChatUpdates(@PathVariable Long chatRoomId) {
+    public DeferredResult<MessageResponseDto> getChatUpdates(@PathVariable Long chatRoomId) {
         // 폴링 시작 로그
         log.info("[LongPoll] chatRoomId={} - 연결 시도", chatRoomId);
-        DeferredResult<MessageDto> result = new DeferredResult<>(20000L); // 20초 동안 대기
+        DeferredResult<MessageResponseDto> result = new DeferredResult<>(20000L); // 20초 동안 대기
 
         // 응답이 완료,타임아웃,에러일 때 로그
         result.onCompletion(() ->
@@ -117,5 +117,5 @@ public class ChatController {
         chatUpdateService.register(chatRoomId, result);
         return result;
     }
-
+    
 }

@@ -1,7 +1,8 @@
 package com.zoop.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zoop.chat.dto.MessageDto;
+import com.zoop.chat.dto.MessageRequestDto;
+import com.zoop.chat.dto.MessageResponseDto;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.service.ChatUpdateService;
 import com.zoop.chat.type.SenderType;
@@ -68,24 +69,22 @@ public class ChatControllerTest {
         LocalDateTime createdAt = LocalDateTime.now();
         String expectedTime = getExpectedTime(createdAt);
 
-        MessageDto request = MessageDto.builder()
+        MessageRequestDto request = MessageRequestDto.builder()
                 .chatRoomId(null)
 //                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("안녕하세요")
                 .build();
 
-        MessageDto response = MessageDto.builder()
+        MessageResponseDto response = MessageResponseDto.builder()
                 .messageId(messageId)
                 .chatRoomId(generatedChatRoomId)
 //                .userId(userId)
-                .senderType(SenderType.USER)
-                .content("안녕하세요")
                 .createdAt(createdAt)
                 .build();
 
         when(chatService.createChatRoom(userId)).thenReturn(generatedChatRoomId);
-        when(chatService.saveMessage(any(MessageDto.class))).thenReturn(response);
+        when(chatService.saveMessage(any(MessageRequestDto.class))).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/chat")
@@ -97,7 +96,7 @@ public class ChatControllerTest {
                 .andExpect(jsonPath("$.createdAt").value(expectedTime));
 
         verify(chatService).createChatRoom(userId);
-        verify(chatService).saveMessage(any(MessageDto.class));
+        verify(chatService).saveMessage(any(MessageRequestDto.class));
     }
 
     @Test
@@ -109,23 +108,21 @@ public class ChatControllerTest {
         LocalDateTime createdAt = LocalDateTime.now();
         String expectedTime = getExpectedTime(createdAt);
 
-        MessageDto request = MessageDto.builder()
+        MessageRequestDto request = MessageRequestDto.builder()
                 .chatRoomId(existingChatRoomId)
 //                .userId(userId)
                 .senderType(SenderType.USER)
                 .content("이미 있는 방에서 보낸 메시지")
                 .build();
 
-        MessageDto response = MessageDto.builder()
+        MessageResponseDto response = MessageResponseDto.builder()
                 .messageId(messageId)
                 .chatRoomId(existingChatRoomId)
 //                .userId(userId)
-                .senderType(SenderType.USER)
-                .content("이미 있는 방에서 보낸 메시지")
                 .createdAt(createdAt)
                 .build();
 
-        when(chatService.saveMessage(any(MessageDto.class))).thenReturn(response);
+        when(chatService.saveMessage(any(MessageRequestDto.class))).thenReturn(response);
 
         // when & then
         mockMvc.perform(post("/chat")
@@ -140,7 +137,7 @@ public class ChatControllerTest {
         verify(chatService, never()).createChatRoom(anyLong());
 
         // 메시지 저장은 호출돼야 함
-        verify(chatService).saveMessage(any(MessageDto.class));
+        verify(chatService).saveMessage(any(MessageRequestDto.class));
     }
 
     @Test
@@ -183,7 +180,7 @@ public class ChatControllerTest {
 
         verify(chatService).updateChatRoomTitle(chatRoomId, newTitle);
     }
-    
+
     @Test
     void 채팅방_제목_변경_실패_시_500_Internal_Server_Error와_에러_메시지를_반환한다() throws Exception {
         // given
@@ -219,5 +216,5 @@ public class ChatControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("[" + context + "] 존재하지 않는 채팅방입니다. chatRoomId=" + chatRoomId));
     }
-    
+
 }

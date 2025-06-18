@@ -2,6 +2,8 @@ package com.zoop.chat.service;
 
 import com.zoop.chat.dto.ChatRoomDto;
 import com.zoop.chat.dto.MessageDto;
+import com.zoop.chat.dto.MessageRequestDto;
+import com.zoop.chat.dto.MessageResponseDto;
 import com.zoop.chat.entity.ChatRoom;
 import com.zoop.chat.entity.Message;
 import com.zoop.chat.repository.ChatRoomRepository;
@@ -51,16 +53,15 @@ public class ChatService {
 
     // 메시지 저장
     @Transactional
-    public MessageDto saveMessage(MessageDto messageDto) {
+    public MessageResponseDto saveMessage(MessageRequestDto messageRequestDto) {
         try {
-            ChatRoom chatRoom = findByChatRoomId(messageDto.getChatRoomId(), ErrorMessages.CHAT_SAVE_MESSAGE_FAILED); // 채팅방의 존재 여부를 확인하여, 없으면 예외 발생 (EntityNotFoundException)
-            Message message = new Message(chatRoom, messageDto.getSenderType(), messageDto.getContent());
+            ChatRoom chatRoom = findByChatRoomId(messageRequestDto.getChatRoomId(), ErrorMessages.CHAT_SAVE_MESSAGE_FAILED); // 채팅방의 존재 여부를 확인하여, 없으면 예외 발생 (EntityNotFoundException)
+            Message message = new Message(chatRoom, messageRequestDto.getSenderType(), messageRequestDto.getContent());
             Message saved =  messageRepository.save(message);
             chatRoom.updateLastMessageAt(saved.getCreatedAt()); // 채팅방의 마지막 메시지 발송 시각을 갱신
-            messageDto.updateMessageInfo(saved.getMessageId(), saved.getCreatedAt());
-            return messageDto;
+            return new MessageResponseDto(messageRequestDto.getChatRoomId(), saved.getMessageId(), saved.getCreatedAt());
         } catch (Exception e) {
-            throw new ChatServiceException(ErrorMessages.CHAT_SAVE_MESSAGE_FAILED, messageDto.getChatRoomId(), e);
+            throw new ChatServiceException(ErrorMessages.CHAT_SAVE_MESSAGE_FAILED, messageRequestDto.getChatRoomId(), e);
         }
     }
 
@@ -110,7 +111,6 @@ public class ChatService {
     public List<MessageDto> getChatMessages(Long chatRoomId) {
         List<Message> messages = messageRepository.getMessagesByChatRoomId(chatRoomId);
         List<MessageDto> result = new ArrayList<>();
-
         int order = 0;
 
         for (Message m : messages) {
@@ -132,7 +132,6 @@ public class ChatService {
     public MessageDto getRecentMessage(Long chatRoomId) {
         Message m = messageRepository.findTop1ByChatRoom_ChatRoomIdAndSenderTypeOrderByCreatedAtDesc(chatRoomId, SenderType.CHATBOT);
         return MessageDto.builder()
-                .order(0)
                 .chatRoomId(chatRoomId)
                 .messageId(m.getMessageId())
                 .senderType(m.getSenderType())
@@ -145,7 +144,7 @@ public class ChatService {
     public void generateAndSaveAiResponse(Long chatRoomId, String userMessageContent) {
         //String aiReply = customAI.generateReply(userMessageContent); // AI 호출
         String aiReply = ++CHATBOT_MESSAGE_ORDER + ". ai의 답변입니다.";
-        MessageDto aiMessage = saveMessage(new MessageDto(chatRoomId, SenderType.CHATBOT, aiReply));
+        MessageResponseDto aiMessage = saveMessage(new MessageRequestDto(chatRoomId, aiReply, SenderType.CHATBOT));
         log.info("ai의 답변 DB 저장 완료: {}", aiMessage);
         chatUpdateService.notifyNewMessage(aiMessage); // 롱폴링 응답 보내기
     }

@@ -1,6 +1,7 @@
 package com.zoop.chat.service;
 
-import com.zoop.chat.dto.MessageDto;
+import com.zoop.chat.dto.MessageRequestDto;
+import com.zoop.chat.dto.MessageResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -12,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ChatUpdateService {
 
-    private final Map<Long, List<DeferredResult<MessageDto>>> chatListeners = new ConcurrentHashMap<>();
+    private final Map<Long, List<DeferredResult<MessageResponseDto>>> chatListeners = new ConcurrentHashMap<>();
 
-    public void register(Long chatRoomId, DeferredResult<MessageDto> result) {
+    public void register(Long chatRoomId, DeferredResult<MessageResponseDto> result) {
         chatListeners.computeIfAbsent(chatRoomId, k -> new ArrayList<>()).add(result);
 
         result.onCompletion(() -> {
@@ -23,11 +24,11 @@ public class ChatUpdateService {
         });
     }
 
-    public void notifyNewMessage(MessageDto messageDto) {
-        List<DeferredResult<MessageDto>> listeners = chatListeners.get(messageDto.getChatRoomId());
+    public void notifyNewMessage(MessageResponseDto messageResponseDto) {
+        List<DeferredResult<MessageResponseDto>> listeners = chatListeners.get(messageResponseDto.getChatRoomId());
         if (listeners != null) {
-            for (DeferredResult<MessageDto> listener : listeners) {
-                listener.setResult(messageDto); // 메시지 전달
+            for (DeferredResult<MessageResponseDto> listener : listeners) {
+                listener.setResult(messageResponseDto); // 메시지 전달
             }
             listeners.clear(); // 한 번 전달한 후 비워줘야 함
         }
