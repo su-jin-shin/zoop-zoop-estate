@@ -835,6 +835,7 @@ export const useChatState = () => {
           return res.json();
         })
         .then(newMessageDto => {
+          console.log(`폴링 응답 도착:`, newMessageDto);
           const newMessage: Message = {
             id: newMessageDto.messageId,
             text: newMessageDto.content,

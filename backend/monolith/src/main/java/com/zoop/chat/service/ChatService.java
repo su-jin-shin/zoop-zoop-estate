@@ -1,9 +1,6 @@
 package com.zoop.chat.service;
 
-import com.zoop.chat.dto.ChatRoomDto;
-import com.zoop.chat.dto.MessageDto;
-import com.zoop.chat.dto.MessageRequestDto;
-import com.zoop.chat.dto.MessageResponseDto;
+import com.zoop.chat.dto.*;
 import com.zoop.chat.entity.ChatRoom;
 import com.zoop.chat.entity.Message;
 import com.zoop.chat.repository.ChatRoomRepository;
@@ -14,6 +11,7 @@ import com.zoop.exception.chat.ChatRoomNotFoundException;
 import com.zoop.exception.chat.ChatServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.mapping.Property;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -150,7 +148,42 @@ public class ChatService {
 
         MessageResponseDto aiMessage = saveMessage(request);
         log.info("ai의 답변 DB 저장 완료: {}", aiMessage);
-        chatUpdateService.notifyNewMessage(aiMessage); // 롱폴링 응답 보내기
+
+        chatUpdateService.notifyNewMessage(MessageDto.builder()
+                .chatRoomId(request.getChatRoomId())
+                .messageId(aiMessage.getMessageId())
+                .senderType(SenderType.CHATBOT)
+                .content(aiReply)
+                .createdAt(aiMessage.getCreatedAt())
+                .build()); // 롱폴링 응답 보내기
+    }
+
+    @Async
+    public void generateAndSaveAiResponse(MessageRequestDto request, List<PropertyDto> properties) {
+        String userMessageContent = request.getContent();
+        //String aiReply = customAI.generateReply(userMessageContent); // AI 호출
+
+        String aiReply;
+        if (properties == null) {
+            aiReply = "매물 추천에 실패하였습니다. 다시 한번 시도해 주세요.";
+        } else if (properties.isEmpty()) {
+            aiReply = "해당 조건에 맞는 매물이 존재하지 않습니다. 필터를 다시 설정해 주세요.";
+        } else {
+            aiReply = "매물을 추천해 드리겠습니다.";
+        }
+        request.applyAiReply(aiReply, SenderType.CHATBOT);
+
+        MessageResponseDto aiMessage = saveMessage(request);
+        log.info("ai의 답변 DB 저장 완료: {}", aiMessage);
+
+        chatUpdateService.notifyNewMessage(MessageDto.builder()
+                .chatRoomId(request.getChatRoomId())
+                .messageId(aiMessage.getMessageId())
+                .senderType(SenderType.CHATBOT)
+                .content(aiReply)
+                .properties(properties)
+                .createdAt(aiMessage.getCreatedAt())
+                .build()); // 롱폴링 응답 보내기
     }
 
 }
