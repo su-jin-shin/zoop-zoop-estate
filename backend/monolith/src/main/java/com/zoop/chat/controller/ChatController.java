@@ -1,9 +1,11 @@
 package com.zoop.chat.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.zoop.chat.dto.*;
 import com.zoop.chat.service.ChatService;
 import com.zoop.chat.service.ChatUpdateService;
 import com.zoop.chat.type.SenderType;
+import com.zoop.util.UserFilterSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +39,7 @@ public class ChatController {
 
         // 1. 채팅방 생성
         if (chatRoomId == null) {
-            chatRoomId = chatService.createChatRoom(userId);
+            chatRoomId = chatService.createChatRoom(userId, request.getTitle());
             log.info("{}번 채팅방이 생성됨", chatRoomId);
             request.setChatRoomId(chatRoomId);
         }
@@ -51,8 +53,16 @@ public class ChatController {
         } else {
             // 크롤링 로직 시작
             log.info("filters: {}", filters);
+            List<PropertyDto> properties = null;
+            try {
+                properties = UserFilterSender.send(filters);
+                log.info("properties: {}", properties);
+            } catch(Exception e) {
+                log.error("크롤링 실패", e);
+            } finally {
+                chatService.generateAndSaveAiResponse(request, properties);
+            }
         }
-
         log.info("response: {}", response);
         return ResponseEntity.ok(response);
     }
@@ -101,10 +111,10 @@ public class ChatController {
     // 사용자의 질문에 대한 챗봇의 응답 전송
     // 롱-폴링(long polling) 방식으로 새 메시지가 생길 때까지 최대 20초 동안 연결을 유지
     @GetMapping("/{chatRoomId}/updates")
-    public DeferredResult<MessageResponseDto> getChatUpdates(@PathVariable Long chatRoomId) {
+    public DeferredResult<MessageDto> getChatUpdates(@PathVariable Long chatRoomId) {
         // 폴링 시작 로그
         log.info("[LongPoll] chatRoomId={} - 연결 시도", chatRoomId);
-        DeferredResult<MessageResponseDto> result = new DeferredResult<>(20000L); // 20초 동안 대기
+        DeferredResult<MessageDto> result = new DeferredResult<>(20000L); // 20초 동안 대기
 
         // 응답이 완료,타임아웃,에러일 때 로그
         result.onCompletion(() ->
