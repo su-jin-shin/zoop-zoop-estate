@@ -45,7 +45,7 @@ const FeaturedProperties = () => {
   return (
     <section className="bg-real-lightBlue rounded-lg p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-real-black">프리미엄 매물</h2>
+        <h2 className="text-2xl font-bold text-real-black">추천매물</h2>
         <Button variant="ghost" className="text-real-blue hover:text-real-blue/80">
           더보기 <ArrowRight className="ml-1 h-4 w-4" />
         </Button>

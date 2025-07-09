@@ -39,11 +39,11 @@ export const transactionQuestion: Message = {
 
 export const propertyQuestion: Message = {
   id: 4,
-  text: "어떤 종류의 부동산을 찾고 계신가요?",
+  text: "어떤 종류의 부동산을 찾고 계신가요? (여러 개 선택 가능)",
   isUser: false,
   timestamp: new Date(),
-  options: ["원룸 ⦁ 투룸", "빌라", "오피스텔", "아파트"],
-  inputType: 'radio',
+  options: ["원룸 / 투룸", "빌라", "오피스텔", "아파트"],
+  inputType: 'checkbox',
 };
 
 export const priceQuestion: Message = {

@@ -10,8 +10,7 @@ import {
   chatResponses
 } from "../utils/messageUtils";
 import { toast } from "@/hooks/use-toast";
-import { sendMessageToServer } from "../ChatAPI";
-import { nanoid } from "nanoid";
+import { formatPrice } from "@/lib/priceUtils";
 
 // Mock property data for recommendations - would come from API in real app
 const recommendedProperties = [
@@ -22,7 +21,7 @@ const recommendedProperties = [
     price: "5000만원",
     deposit: "65만원",
     rentalType: "전세",
-    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3"
+    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
   },
   {
     id: 2,
@@ -30,7 +29,7 @@ const recommendedProperties = [
     address: "서울시 용산구 한남동 789-10",
     price: "1억 2000만원",
     rentalType: "매매",
-    imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3"
+    imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
   },
   {
     id: 3,
@@ -39,7 +38,7 @@ const recommendedProperties = [
     price: "3000만원",
     deposit: "55만원",
     rentalType: "전세",
-    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3"
+    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
   }
 ];
 
@@ -48,7 +47,7 @@ export const useChatState = () => {
     {
       id: 1,
       title: "줍줍",
-      messages: [initialMessage], // Modified: Now only includes the combined initialMessage
+      messages: [initialMessage],
       timestamp: new Date(),
     }
   ]);
@@ -56,29 +55,15 @@ export const useChatState = () => {
   const [input, setInput] = useState("");
   const [preferences, setPreferences] = useState<PropertyPreferences>({ step: -1 });
   const [selectedOption, setSelectedOption] = useState<string>("");
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [recommendationShown, setRecommendationShown] = useState(false);
   const [propertiesShown, setPropertiesShown] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
-
+  const [showPropertyList, setShowPropertyList] = useState(false);
+  
   const currentChat = chatHistories.find(chat => chat.id === currentChatId) || chatHistories[0];
   const messages = currentChat.messages;
-
-
-  const [selectedChatRoomId, setSelectedChatRoomId] = useState<number | null>(null);
-  useEffect(() => {
-    if (!selectedChatRoomId) return;
-  }, [selectedChatRoomId]);
-
-  const appendMessageToCurrentChat = (chatRoomId: number, message: Message) => {
-    setChatHistories(prev =>
-      prev.map(chat =>
-        chat.chatRoomId === chatRoomId
-          ? { ...chat, messages: [...chat.messages, message] }
-          : chat
-      )
-    );
-  };
-
+  
   // Progress through the guided questions
   useEffect(() => {
     const currentMessages = currentChat.messages;
@@ -94,7 +79,7 @@ export const useChatState = () => {
       addBotMessage(transactionQuestion);
     } else if (preferences.step === 2 && preferences.transactionType && !lastMessage.inputType) {
       addBotMessage(propertyQuestion);
-    } else if (preferences.step === 3 && preferences.propertyType && !lastMessage.inputType) {
+    } else if (preferences.step === 3 && (preferences.propertyType || preferences.propertyTypes) && !lastMessage.inputType) {
       // For all transaction types, ask for price first
       addBotMessage(priceQuestion);
     } else if (preferences.step === 4 && preferences.priceRange && !lastMessage.inputType) {
@@ -112,7 +97,32 @@ export const useChatState = () => {
       }
     }
   }, [preferences, currentChat.messages, recommendationShown]);
-  
+
+  // Handle cancel filter to go back to initial state
+  const handleCancelFilter = () => {
+    // Remove the location question message from the chat
+    const updatedMessages = currentChat.messages.filter(msg => msg.id !== locationQuestion.id);
+    
+    setChatHistories(prev => 
+      prev.map(chat => {
+        if (chat.id === currentChatId) {
+          return {
+            ...chat,
+            messages: updatedMessages,
+          };
+        }
+        return chat;
+      })
+    );
+    
+    // Reset all preferences and selections
+    setPreferences({ step: -1 });
+    setSelectedOption("");
+    setSelectedOptions([]);
+    setInput("");
+    setRecommendationShown(false);
+    setPropertiesShown(false);
+  };
 
   // Handle back button to go to previous step
   const handleBackButton = () => {
@@ -136,6 +146,7 @@ export const useChatState = () => {
         );
         setPreferences(prev => ({ ...prev, location: undefined, step: 0 }));
         setSelectedOption("");
+        setSelectedOptions([]);
         break;
         
       case 2: // If we're on property type question, go back to transaction type question
@@ -153,6 +164,7 @@ export const useChatState = () => {
         );
         setPreferences(prev => ({ ...prev, transactionType: undefined, step: 1 }));
         setSelectedOption("");
+        setSelectedOptions([]);
         break;
         
       case 3: // If we're on price question, go back to property type question
@@ -168,8 +180,9 @@ export const useChatState = () => {
             return chat;
           })
         );
-        setPreferences(prev => ({ ...prev, propertyType: undefined, step: 2 }));
+        setPreferences(prev => ({ ...prev, propertyType: undefined, propertyTypes: undefined, step: 2 }));
         setSelectedOption("");
+        setSelectedOptions([]);
         setInput("");
         break;
         
@@ -192,12 +205,15 @@ export const useChatState = () => {
     }
   };
 
-  // Show recommended properties after searching message has been displayed
+  // 개선된 매물 추천 표시 로직 - 안정적인 렌더링을 위해 수정
   useEffect(() => {
     if (recommendationShown && !propertiesShown) {
-      // Wait 2 seconds to simulate "searching" before showing properties
       const timer = setTimeout(() => {
-        // Create the property recommendations HTML
+        const optimizedProperties = recommendedProperties.map(property => ({
+          ...property,
+          imageUrl: `${property.imageUrl}&w=300&h=200&fit=crop&auto=format`
+        }));
+        
         const mapHTML = `
           <div class="mb-3 rounded overflow-hidden border border-gray-200">
             <div class="relative w-full h-32 bg-gray-100 flex items-center justify-center">
@@ -210,12 +226,17 @@ export const useChatState = () => {
         `;
         
         let propertiesHTML = '';
-        recommendedProperties.forEach(property => {
+        optimizedProperties.forEach((property, index) => {
           propertiesHTML += `
-            <div class="property-item mb-2 border rounded-md overflow-hidden cursor-pointer hover:shadow-md transition-all" data-property-id="${property.id}">
+            <div class="property-item mb-2 border rounded-md overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 relative" data-property-id="${property.id}">
+              <div class="absolute top-2 left-2 z-10">
+                <div class="bg-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold text-real-blue border border-real-blue shadow-sm">
+                  ${index + 1}
+                </div>
+              </div>
               <div class="flex">
                 <div class="w-1/3">
-                  <img src="${property.imageUrl}" alt="${property.title}" class="w-full h-20 object-cover">
+                  <img src="${property.imageUrl}" alt="${property.title}" class="w-full h-20 object-cover" loading="lazy">
                 </div>
                 <div class="p-2 flex-1">
                   <h3 class="text-sm font-medium">${property.title}</h3>
@@ -235,13 +256,12 @@ export const useChatState = () => {
           <div class="mb-2 font-medium">조건에 맞는 매물 ${recommendedProperties.length}개를 찾았습니다.</div>
           ${propertiesHTML}
           <div class="text-center mt-3">
-            <button class="text-xs text-real-blue hover:underline">더 많은 매물 보기</button>
+            <button class="show-more-properties text-xs text-real-blue hover:underline">더 많은 매물 보기</button>
           </div>
         `;
         
-        // Add the recommendations message
+        // 한 번에 모든 내용을 추가하여 깜빡임 방지
         addBotMessage({
-          //id: messages.length + 3,
           id: Date.now(), // 고유한 ID 사용
           text: recommendationsHTML,
           isUser: false,
@@ -250,13 +270,13 @@ export const useChatState = () => {
         
         setPropertiesShown(true);
         
-      }, 2000);
+      }, 800); // 타이밍 조정
       
       return () => clearTimeout(timer);
     }
   }, [recommendationShown, propertiesShown]);
 
-  const showRecommendationSummary = async() => {
+  const showRecommendationSummary = () => {
     // Prevent duplicate messages
     if (recommendationShown) return;
     setRecommendationShown(true);
@@ -265,15 +285,15 @@ export const useChatState = () => {
     let summary = `${preferences.location} 지역의 ${preferences.transactionType} ${preferences.propertyType}, <br>`;
     
     if (preferences.transactionType === '월세') {
-      summary += `월세 ${preferences.priceRange}만원`;
+      summary += `월세 ${formatPrice(preferences.priceRange || '0')}`;
       if (preferences.depositAmount) {
-        summary += `, 보증금 ${preferences.depositAmount}만원`;
+        summary += `, 보증금 ${formatPrice(preferences.depositAmount)}`;
       }
       summary += ` 조건에 맞는 매물을 찾아볼게요.`;
     } else if (preferences.transactionType === '전세') {
-      summary += `전세금 ${preferences.priceRange}만원 조건에 맞는 매물을 찾아볼게요.`;
+      summary += `전세금 ${formatPrice(preferences.priceRange || '0')} 조건에 맞는 매물을 찾아볼게요.`;
     } else {
-      summary += `매매가 ${preferences.priceRange}만원 조건에 맞는 매물을 찾아볼게요.`;
+      summary += `매매가 ${formatPrice(preferences.priceRange || '0')} 조건에 맞는 매물을 찾아볼게요.`;
     }
     
     addBotMessage({
@@ -282,55 +302,11 @@ export const useChatState = () => {
       isUser: false,
       timestamp: new Date()
     });
-
-    const filters = { 
-      regionName: preferences.location || "", 
-      regionCode: "1168010300", //임시로 임의의 동(개포동)번호를 하드코딩,
-      tradeTypeName: preferences.transactionType || "",
-      tradeTypeCode: preferences.transactionTypeCode || "",
-      realEstateTypeName: preferences.propertyType || "",
-      realEstateTypeCode: preferences.propertyTypeCode || "", 
-      dealOrWarrantPrc: preferences.transactionType === "월세"
-                          ? Number(preferences.depositAmount) || null
-                          : Number(preferences.priceRange) || null,
-      rentPrice: preferences.transactionType === "월세"? Number(preferences.priceRange) || null : null
-    };
-    console.log("추천 매물 요청 JSON:", filters);
-
     
-    const messagePayload = {
-      content: summary,
-      senderType: "CHATBOT",
-      filters,
-      ...(currentChat?.chatRoomId && { chatRoomId: currentChat.chatRoomId }), // chatRoomId 있으면만 포함
-    };  
-
-    try {
-      await fetch("http://localhost:8080/chat", {  
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(messagePayload),
-      });
-    } catch (err) {
-      console.error("필터 요약 JSON 서버 전송 실패:", err);
-    }
-
-    // Update chat title based on user preferences using the requested format without colon
-    let deposit = preferences.depositAmount && preferences.transactionType === '월세' ? ` (보증금 ${preferences.depositAmount})` : '';
-    const chatTitle = `${preferences.location} / ${preferences.transactionType} / ${preferences.propertyType} / ${preferences.priceRange}${deposit}`;
-    
-    const chatRoomId = currentChat.chatRoomId;
-    if (chatRoomId) {
-      try {
-        await fetch(`http://localhost:8080/chat/${chatRoomId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: chatTitle }),
-        });
-      } catch (error) {
-        console.error("채팅방 제목 변경 실패:", error);
-      }
-    }
+    // Update chat title based on user preferences using formatted prices
+    let deposit = preferences.depositAmount && preferences.transactionType === '월세' ? ` (보증금 ${formatPrice(preferences.depositAmount)})` : '';
+    const formattedPrice = formatPrice(preferences.priceRange || '0');
+    const chatTitle = `${preferences.location} / ${preferences.transactionType} / ${preferences.propertyType} / ${formattedPrice}${deposit}`;
     
     setChatHistories(prev => 
       prev.map(chat => {
@@ -345,23 +321,22 @@ export const useChatState = () => {
     );
     
     // Add recommendation results message with the new wording
-    // setTimeout(() => {
-    //   addBotMessage({
-    //     id: messages.length + 2,
-    //     text: "AI가 추천 매물을 검색 중입니다. 잠시만 기다려주세요!",
-    //     isUser: false,
-    //     timestamp: new Date()
-    //   });
+    setTimeout(() => {
+      addBotMessage({
+        id: messages.length + 2,
+        text: "AI가 추천 매물을 검색 중입니다. 잠시만 기다려주세요!",
+        isUser: false,
+        timestamp: new Date()
+      });
       
-    //   // Show a toast notification
-    //   toast({
-    //     title: "매물 검색",
-    //     description: "조건에 맞는 매물을 찾고 있습니다.",
-    //   });
-    // }, 1000);
+      // Show a toast notification
+      toast({
+        title: "매물 검색",
+        description: "조건에 맞는 매물을 찾고 있습니다.",
+      });
 
-    // 추천 끝났으니 step을 -1로 전환
-    setPreferences(prev => ({ ...prev, step: -1 }));
+      setPreferences(prev => ({ ...prev, step: -1 }));      
+    }, 500); // 0.5초로 단축
   };
 
   const addBotMessage = (message: Message) => {
@@ -378,38 +353,23 @@ export const useChatState = () => {
     );
   };
 
-  const addBotMessageWithServerSync = async (text: string, chatRoomId: number) => {
-    const botMessage: Message = {
-      id: messages.length + 1,
-      text,
-      isUser: false,
-      timestamp: new Date(),
-      uniqueKey: nanoid(),
-    };
-  
-    addBotMessage(botMessage);
-  
-    try {
-      await sendMessageToServer(
-        text,               // content
-        0,                  // userId = 0 for chatbot
-        false,              // isUser = false → senderType: "CHATBOT"
-        chatRoomId          // 서버에서 받은 chatRoomId 사용
-      );
-    } catch (err) {
-      console.error("챗봇 메시지 전송 실패:", err);
-    }
-  };
-  
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     // For search input type, don't allow direct text submission
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.inputType === 'search' && !selectedOption) {
       return; // Don't proceed if no option is selected in search mode
     }
     
-    // Get text to send (either from input or selected option)
+    // For checkbox input, don't allow submission if no options are selected
+    if (lastMessage.inputType === 'checkbox' && selectedOptions.length === 0) {
+      return;
+    }
+    
+    // Get text to send (either from input, selected option, or selected options for checkbox)
     let messageText = selectedOption || input;
+    if (lastMessage.inputType === 'checkbox') {
+      messageText = selectedOptions.join(', ');
+    }
     
     // Check if this is the deposit question and the user is submitting it empty
     const isDepositEmpty = lastMessage.id === 6 && messageText === "";
@@ -419,63 +379,22 @@ export const useChatState = () => {
       messageText = "건너뛰기";
     }
 
-    // 서버에 메시지 보내기
-    // 1. 메시지 전송
-    const currentChat = chatHistories.find(chat => chat.id === currentChatId);
-    let response = { chatRoomId: currentChat?.chatRoomId };
-    let aiMessage: Message | null = null;
-
-    if (preferences.step === -1) {
-      response = await sendMessageToServer(
-        messageText,
-        123, // 유저 ID (실제 로그인 유저 ID로 바꾸기)
-        true, 
-        currentChat?.chatRoomId,
-      );
-
-      // 2. 서버 응답에서 chatRoomId 받기
-      const { chatRoomId } = response;
-      console.log("서버 응답 chatRoomId:", chatRoomId);
-      pollChatUpdates(chatRoomId);
-      
-      const res = await fetch(`http://localhost:8080/chat/${chatRoomId}/recent`); // 3. 최근 메시지 가져오기(가장 최근 챗봇 메시지)
-      const recentAi = await res.json();
-      console.log("AI 응답:", recentAi);
-
-      // 4-1. 메시지 객체 만들어서 추가(AI 메시지)
-      aiMessage = {
-        id: recentAi.messageId,
-        text: recentAi.content,
-        isUser: false,
-        timestamp: new Date(recentAi.createdAt),
-        uniqueKey: nanoid(),
-      };
-      updateCurrentChatMessages(chatRoomId, aiMessage);
-    }
- 
-    // 4-2. 메시지 객체 만들어서 추가(User 메시지)
+    // Add user message
     const newUserMessage: Message = {
       id: messages.length + 1,
       text: messageText,
       isUser: true,
       timestamp: new Date(),
-      uniqueKey: nanoid(),
     };
-    updateCurrentChatMessages(currentChatId, newUserMessage);
-
 
     // Update the current chat with the new message
     const updatedHistories = chatHistories.map(chat => {
       if (chat.id === currentChatId) {
         return {
           ...chat,
-          messages: [
-            ...chat.messages,
-            newUserMessage,
-            ...(aiMessage ? [aiMessage] : []),  // aiMessage가 있을 때만 추가
-          ],
-          title: chat.title,
-          chatRoomId: response.chatRoomId,
+          messages: [...chat.messages, newUserMessage],
+          // 제목은 이제 최종 검색 시점에만 변경됩니다
+          title: chat.title
         };
       }
       return chat;
@@ -484,22 +403,7 @@ export const useChatState = () => {
     setChatHistories(updatedHistories);
     setInput("");
     setSelectedOption("");
-
-
-
-    const tradeTypeMap: Record<string, string> = {
-      '매매': 'A1',
-      '전세': 'B1',
-      '월세': 'B2',
-    };
-
-    const propertyTypeMap: Record<string, string> = {
-      '아파트': 'APT',
-      '오피스텔': 'OPST',
-      '빌라': 'VL:YR',
-      '원룸 ⦁ 투룸': 'DDDGG:DSD',
-    };
-
+    setSelectedOptions([]);
 
     // If we're in the filter flow, update preferences based on the current step
     if (preferences.step >= 0) {
@@ -509,16 +413,23 @@ export const useChatState = () => {
         setPreferences(prev => ({ 
           ...prev, 
           transactionType: messageText as '월세' | '전세' | '매매', 
-          transactionTypeCode: tradeTypeMap[messageText], 
           step: 2 
         }));
       } else if (preferences.step === 2) {
-        setPreferences(prev => ({ 
-          ...prev, 
-          propertyType: messageText as '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트', 
-          propertyTypeCode: propertyTypeMap[messageText], 
-          step: 3 
-        }));
+        if (lastMessage.inputType === 'checkbox') {
+          setPreferences(prev => ({ 
+            ...prev, 
+            propertyTypes: selectedOptions,
+            propertyType: selectedOptions.join(', '),
+            step: 3 
+          }));
+        } else {
+          setPreferences(prev => ({ 
+            ...prev, 
+            propertyType: messageText,
+            step: 3 
+          }));
+        }
       } else if (preferences.step === 3) {
         // Set price range for all transaction types
         setPreferences(prev => ({ 
@@ -539,16 +450,20 @@ export const useChatState = () => {
       }
     } 
     // If we're not in the filter flow, generate a random response from the array
-    // else if (preferences.step === -1) {
-    //   setTimeout(() => {
-    //     (async () => {
-    //       // Get a random response from the chatResponses array
-    //       const randomIndex = Math.floor(Math.random() * chatResponses.length);
-    //       const randomResponse = chatResponses[randomIndex];   
-    //       await addBotMessageWithServerSync(randomResponse, chatRoomId);
-    //     })();
-    //   }, 500);
-    // }
+    else if (preferences.step === -1) {
+      setTimeout(() => {
+        // Get a random response from the chatResponses array
+        const randomIndex = Math.floor(Math.random() * chatResponses.length);
+        const randomResponse = chatResponses[randomIndex];
+        
+        addBotMessage({
+          id: messages.length + 2,
+          text: randomResponse,
+          isUser: false,
+          timestamp: new Date()
+        });
+      }, 500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -559,6 +474,8 @@ export const useChatState = () => {
   };
 
   const handleLocationSelect = (location: string) => {
+    setSelectedOption(location);
+    
     // 유저 메시지 추가
     const newUserMessage: Message = {
       id: messages.length + 1,
@@ -583,8 +500,7 @@ export const useChatState = () => {
     // 바로 다음 스텝으로 진행
     if (preferences.step === 0) {
       setPreferences(prev => ({ ...prev, location, step: 1 }));
-    }
-    //setSelectedOption(location);
+    }    
   };
 
   const handleStartFilter = () => {
@@ -601,20 +517,20 @@ export const useChatState = () => {
       title: "줍줍",
       messages: [initialMessage],
       timestamp: new Date(),
-      chatRoomId: undefined
     };
     
-    //setChatHistories([...chatHistories, newChat]);
     setChatHistories(prev => [...prev, newChat]);
     setCurrentChatId(newChatId);
     
     // 완전히 초기 상태로 리셋
     setPreferences({ step: -1 });
     setSelectedOption("");
+    setSelectedOptions([]);
     setInput("");
     setRecommendationShown(false);
     setPropertiesShown(false);
     setShowMapView(false);
+    setShowPropertyList(false);
   };
 
   const switchToChat = (chatId: number) => {
@@ -659,7 +575,7 @@ export const useChatState = () => {
           selectedChat.messages.findIndex(msg => msg.id === m.id)
         );
         if (propertyMsg) {
-          newPreferences.propertyType = propertyMsg.text as '원룸 ⦁ 투룸' | '빌라' | '오피스텔' | '아파트';
+          newPreferences.propertyType = propertyMsg.text as '원룸 / 투룸' | '빌라' | '오피스텔' | '아파트';
           step = 3;
         }
       }
@@ -690,188 +606,96 @@ export const useChatState = () => {
       setInput("");
       setSelectedOption("");
       setShowMapView(false);
+      setShowPropertyList(false);
     }
   };
 
-  const editChatTitle = async (chatId: number, newTitle: string) => {
-    const chat = chatHistories.find(chat => chat.id === chatId);
-    const chatRoomId = chat?.chatRoomId;
-
-    // chatRoomId가 없거나 초기 상태라면 서버 통신 없이 로컬 상태만 변경   
-    if (!chatRoomId || chat.title === "줍줍") {
-      setChatHistories(prev => 
-        prev.map(chat => {
-          if (chat.id === chatId) {
-            return {
-              ...chat,
-              title: newTitle,
-            };
-          }
-          return chat;
-        })
-      );
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8080/chat/${chatRoomId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle }),     
-      });
-
-      if (!response.ok) throw new Error("채팅방 제목 변경 실패");
-   
-      // 성공 시 로컬 상태도 갱신
-      setChatHistories(prev =>
-        prev.map(chat =>
-          chat.id === chatId ? { ...chat, title: newTitle } : chat
-        )
-      );
-    } catch (error) {
-      console.error("채팅방 제목 변경 실패:", error);
-    }
-  };
-
-  const deleteChat = async (chatId: number) => {
-    const chatToDelete = chatHistories.find(chat => chat.id === chatId);
-
-    if (!chatToDelete?.chatRoomId) {
-      console.warn("chatRoomId가 존재하지 않아 채팅방 삭제 실패");
-      return;
-    }
-
-    try {
-      
-      // 백엔드에 삭제 요청
-      await fetch(`http://localhost:8080/chat/${chatToDelete.chatRoomId}`, {
-        method: "DELETE",
-      });
-
-      // 화면에서도 제거
-      const updatedChats = chatHistories.filter(chat => chat.id !== chatId);
-      setChatHistories(updatedChats);
-
-      // 선택된 채팅방을 삭제한 경우 새로운 채팅 생성
-      if (currentChatId === chatId) {
-        startNewChat();
-      }
-
-    } catch (error) {
-      console.error("채팅방 삭제 실패:", error);
-    };
-
-    // If deleting the current chat, always create a new one
-    if (currentChatId === chatId) {
-      const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
-      const newChat: ChatHistory = {
-        id: newChatId,
-        title: "줍줍",
-        messages: [initialMessage],
-        timestamp: new Date(),
-      };
-      
-      // Remove the deleted chat and add the new chat
-      setChatHistories(prev => [...prev.filter(chat => chat.id !== chatId), newChat]);
-      setCurrentChatId(newChatId);
-      setPreferences({ step: -1 });
-      setSelectedOption("");
-      setInput("");
-      setRecommendationShown(false);
-      setPropertiesShown(false);
-      setShowMapView(false);
-      return;
-    }
-
-    // If deleting a chat that's not current, just remove it
-    setChatHistories(prev => prev.filter(chat => chat.id !== chatId));
-    
-    // If this was the last chat, create a new one
-    const remainingChats = chatHistories.filter(chat => chat.id !== chatId);
-    if (remainingChats.length === 0) {
-      const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
-      const newChat: ChatHistory = {
-        id: newChatId,
-        title: "줍줍",
-        messages: [initialMessage],
-        timestamp: new Date(),
-      };
-      
-      setChatHistories([newChat]);
-      setCurrentChatId(newChatId);
-      setPreferences({ step: -1 });
-      setSelectedOption("");
-      setInput("");
-      setRecommendationShown(false);
-      setPropertiesShown(false);
-      setShowMapView(false);
-    }
-  };
-
-  const updateCurrentChatMessages = (chatRoomId: number, message: Message) => {
-    if (!message.text || message.text.trim() === "") return; // 빈 메시지 무시
-    if (!message.timestamp || isNaN(new Date(message.timestamp).getTime())) return; // 유효하지 않은 시간 무시
-    setChatHistories(prev =>
-      prev.map(chat =>
-        chat.chatRoomId === chatRoomId
-          ? { ...chat, messages: [...chat.messages, message] }
-          : chat
-      )
+  const editChatTitle = (chatId: number, newTitle: string) => {
+    setChatHistories(prev => 
+      prev.map(chat => {
+        if (chat.id === chatId) {
+          return {
+            ...chat,
+            title: newTitle,
+          };
+        }
+        return chat;
+      })
     );
   };
 
-  const [activePollingRoomId, setActivePollingRoomId] = useState<number | null>(null);
-
-  const pollChatUpdates = (chatRoomId: number) => {
-    if (!chatRoomId || activePollingRoomId === chatRoomId) {
-      return;
+  const deleteChat = (chatId: number) => {
+    // If deleting the current chat, always create a new one
+    if (chatId === currentChatId) {
+      // Create a new chat first
+      const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
+      const newChat: ChatHistory = {
+        id: newChatId,
+        title: "줍줍",
+        messages: [initialMessage],
+        timestamp: new Date(),
+      };
+      
+      // Remove the deleted chat and add the new one
+      const remainingChats = chatHistories.filter(chat => chat.id !== chatId);
+      setChatHistories([...remainingChats, newChat]);
+      setCurrentChatId(newChatId);
+      
+      // Reset all state to initial values
+      setPreferences({ step: -1 });
+      setSelectedOption("");
+      setInput("");
+      setRecommendationShown(false);
+      setPropertiesShown(false);
+      setShowMapView(false);
+      setShowPropertyList(false);
+    } else {
+      // Deleting a chat that's not current, just remove it
+      const remainingChats = chatHistories.filter(chat => chat.id !== chatId);
+      setChatHistories(remainingChats);
+      
+      // If this was the last chat, create a new one
+      if (remainingChats.length === 0) {
+        const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
+        const newChat: ChatHistory = {
+          id: newChatId,
+          title: "줍줍",
+          messages: [initialMessage],
+          timestamp: new Date(),
+        };
+        
+        setChatHistories([newChat]);
+        setCurrentChatId(newChatId);
+        setPreferences({ step: -1 });
+        setSelectedOption("");
+        setInput("");
+        setRecommendationShown(false);
+        setPropertiesShown(false);
+        setShowMapView(false);
+        setShowPropertyList(false);
+      }
     }
-
-    setActivePollingRoomId(chatRoomId); // 중복 방지용 상태 설정
-
-    const doPoll = () => {
-      fetch(`http://localhost:8080/chat/${chatRoomId}/updates`)
-        .then(res => {
-          if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-          return res.json();
-        })
-        .then(newMessageDto => {
-          console.log(`폴링 응답 도착:`, newMessageDto);
-          const newMessage: Message = {
-            id: newMessageDto.messageId,
-            text: newMessageDto.content,
-            isUser: newMessageDto.senderType === "USER",
-            timestamp: new Date(newMessageDto.createdAt),
-          };
-
-          if (newMessage.text?.trim()) {
-            updateCurrentChatMessages(chatRoomId, newMessage);
-          }
-
-          doPoll(); // 다음 요청(재귀 호출)
-        })
-        .catch(err => {
-          console.warn(`chatRoomId ${chatRoomId} 폴링 실패`, err.message);
-          setTimeout(() => doPoll(), 3000);
-        });
-    };
-
-    doPoll(); // 최초 호출
   };
 
-  useEffect(() => {
-    const chat = chatHistories.find(c => c.id === currentChatId);
-    const chatRoomId = chat?.chatRoomId;
+  const handleShowPropertyList = () => {
+    console.log('[useChatState] handleShowPropertyList called, current state:', showPropertyList);
+    setShowPropertyList(true);
+    console.log('[useChatState] setShowPropertyList(true) called');
+  };
 
-    if (chatRoomId && activePollingRoomId !== chatRoomId) {
-      pollChatUpdates(chatRoomId); // 오직 최초 시작에만 호출
-    }
-  }, [currentChatId, chatHistories]);
+  const handleBackToChat = () => {
+    console.log('[useChatState] handleBackToChat called');
+    setShowPropertyList(false);
+    setShowMapView(false);
+  };
+
+  // Debug effect for showPropertyList state changes
+  useEffect(() => {
+    console.log('[useChatState] showPropertyList state changed to:', showPropertyList);
+  }, [showPropertyList]);
 
   return {
-    appendMessageToCurrentChat,
     chatHistories,
-    selectedChatRoomId,
-    setSelectedChatRoomId,
     currentChatId,
     currentChat,
     messages,
@@ -880,17 +704,22 @@ export const useChatState = () => {
     preferences,
     selectedOption,
     setSelectedOption,
+    selectedOptions,
+    setSelectedOptions,
     showMapView,
     setShowMapView,
+    showPropertyList,
+    handleSendMessage,
     handleKeyDown,
     handleLocationSelect,
     handleStartFilter,
     startNewChat,
     switchToChat,
     handleBackButton,
-    addBotMessageWithServerSync,
+    handleCancelFilter,
     editChatTitle,
     deleteChat,
-    handleSendMessage,
+    handleShowPropertyList,
+    handleBackToChat,
   };
 };

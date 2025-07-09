@@ -1,14 +1,9 @@
 
 import HeroSection from "@/components/home/HeroSection";
 import SearchFilters from "@/components/layout/SearchFilters";
-import FeaturedProperties from "@/components/property/FeaturedProperties";
-import PropertyList from "@/components/property/PropertyList";
 import Navbar from "@/components/layout/Navbar";
-import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
-import Map from "@/components/maps/Map";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatBotToggle from "@/components/chat/ChatBotToggle";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -16,46 +11,25 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       
-      <main className="container mx-auto px-6 py-4 flex-1 max-w-3xl">
-        <h2 className="font-bold text-xl mb-3">추천매물</h2>
-        <Map />
-        
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex-1 max-w-3xl">
+        <div className="flex justify-between items-center mb-2 sm:mb-3">
+          <h2 className="font-bold text-base sm:text-lg lg:text-xl">매물찾기</h2>
+        </div>
         <SearchFilters />
         
-        <div className="mb-5">
-          <Tabs defaultValue="all">
-            <TabsList className="w-full grid grid-cols-4 h-11 mb-4">
-              <TabsTrigger value="all" className="text-sm">전체</TabsTrigger>
-              <TabsTrigger value="oneroom" className="text-sm">원룸</TabsTrigger> 
-              <TabsTrigger value="tworoom" className="text-sm">투룸</TabsTrigger>
-              <TabsTrigger value="apt" className="text-sm">아파트</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all">
-              <PropertyList />
-            </TabsContent>
-            <TabsContent value="oneroom">
-              <PropertyList />
-            </TabsContent>
-            <TabsContent value="tworoom">
-              <PropertyList />
-            </TabsContent>
-            <TabsContent value="apt">
-              <PropertyList />
-            </TabsContent>
-          </Tabs>
+        {/* 이미지 섹션 추가 */}
+        <div className="mt-8 mb-6 flex justify-center">
+          <div className="w-full max-w-md rounded-lg overflow-hidden shadow-sm bg-white">
+            <img 
+              src="/image/zoop-zoop-estate.png" 
+              alt="줍줍 메인"
+              className="w-full h-64 object-cover rounded-lg"
+            />
+          </div>
         </div>
-        
-        <div className="mt-5 text-center">
-          <p className="text-real-darkGray mb-3 text-sm">
-            더 많은 매물이 기다리고 있습니다
-          </p>
-          <button className="text-real-blue font-medium hover:underline text-base">
-            더 불러오기
-          </button>
-        </div>
-      </main>
-      
-      <div className="bg-white border-t border-gray-200 py-5 mt-5">
+      </div>
+
+      <div className="bg-white border-t border-gray-200 py-5 mt-5 select-none">
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="flex flex-col items-center">
             <div className="mb-4 text-center">

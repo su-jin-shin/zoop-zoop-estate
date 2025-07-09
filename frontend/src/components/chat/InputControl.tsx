@@ -1,7 +1,9 @@
+
 import { Message } from "./types/chatTypes";
 import DefaultInput from "./inputs/DefaultInput";
 import LocationSearchInput from "./inputs/LocationSearchInput";
 import RadioInput from "./inputs/RadioInput";
+import CheckboxInput from "./inputs/CheckboxInput";
 import TextInput from "./inputs/TextInput";
 import { Button } from "../ui/button";
 
@@ -11,11 +13,16 @@ type InputControlProps = {
   setInput: (value: string) => void;
   selectedOption: string;
   setSelectedOption: (value: string) => void;
+  selectedOptions: string[];
+  setSelectedOptions: (values: string[]) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleSendMessage: () => void;
   handleLocationSelect: (location: string) => void;
   transactionType?: string;
   handleBackButton?: () => void;
+  handleCancelFilter?: () => void;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 };
 
 const InputControl = ({
@@ -24,11 +31,16 @@ const InputControl = ({
   setInput,
   selectedOption,
   setSelectedOption,
+  selectedOptions,
+  setSelectedOptions,
   handleKeyDown,
   handleSendMessage,
   handleLocationSelect,
   transactionType,
   handleBackButton,
+  handleCancelFilter,
+  onInputFocus,
+  onInputBlur,
 }: InputControlProps) => {
   const lastMessage = messages[messages.length - 1];
 
@@ -47,14 +59,30 @@ const InputControl = ({
 
   if (lastMessage.inputType === 'search') {
     return (
-      <LocationSearchInput
-        input={input}
-        setInput={setInput}
-        handleLocationSelect={(location) => {
-          handleLocationSelect(location);
-          handleSendMessage();
-        }}
-      />
+      <div className="space-y-3">
+        <LocationSearchInput
+          input={input}
+          setInput={setInput}
+          handleLocationSelect={(location) => {
+            handleLocationSelect(location);
+            handleSendMessage();
+          }}
+        />
+        
+        {/* Show cancel button for location search (id 2) */}
+        {lastMessage.id === 2 && handleCancelFilter && (
+          <div className="flex justify-center mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCancelFilter}
+              className="flex-1 bg-real-blue hover:bg-real-blue/90 text-white hover:text-white text-xs"
+            >
+              취소
+            </Button>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -68,8 +96,8 @@ const InputControl = ({
           handleSubmit={handleSendMessage}
         />
         
-        {/* Show back button for transaction question (id 3) and property question (id 4) */}
-        {(lastMessage.id === 3 || lastMessage.id === 4) && handleBackButton && (
+        {/* Show back button for transaction question (id 3) */}
+        {lastMessage.id === 3 && handleBackButton && (
           <div className="flex justify-between gap-2 mt-2">
             <Button 
               variant="outline" 
@@ -83,6 +111,40 @@ const InputControl = ({
               className="flex-1 bg-real-blue hover:bg-real-blue/90 text-xs"
               onClick={handleSendMessage}
               disabled={selectedOption.trim() === ''}
+            >
+              다음
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (lastMessage.inputType === 'checkbox' && lastMessage.options) {
+    return (
+      <div className="space-y-3">
+        <CheckboxInput
+          options={lastMessage.options}
+          selectedOptions={selectedOptions}
+          setSelectedOptions={setSelectedOptions}
+          handleSubmit={handleSendMessage}
+        />
+        
+        {/* Show back button for property question (id 4) */}
+        {lastMessage.id === 4 && handleBackButton && (
+          <div className="flex justify-between gap-2 mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleBackButton}
+              className="flex-1 text-xs"
+            >
+              이전
+            </Button>
+            <Button
+              className="flex-1 bg-real-blue hover:bg-real-blue/90 text-xs"
+              onClick={handleSendMessage}
+              disabled={selectedOptions.length === 0}
             >
               다음
             </Button>
@@ -127,6 +189,8 @@ const InputControl = ({
         questionId={lastMessage.id} // Pass the question ID to the TextInput
         handleBackButton={handleBackButton} // Pass the back button handler to TextInput
         isLastQuestion={isLastQuestion} // 마지막 질문 여부 전달
+        onInputFocus={onInputFocus}
+        onInputBlur={onInputBlur}
       />
     );
   }
