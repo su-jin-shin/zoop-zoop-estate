@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
-import { List, ArrowUpDown } from "lucide-react";
+import { List, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,6 +23,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // Mock properties for the map view - expanded for pagination demo
 const mapProperties = [
@@ -138,6 +139,7 @@ const mapProperties = [
 const MapSearch = () => {
   /* ───────────── URL 쿼리 읽기 ───────────── */
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const keyword = searchParams.get("keyword") || "";   // 검색어
   const isComplexSearch = searchParams.get("isComplexSearch") === "true"; // 단지여부
   /* ─────────────────────────────────── */
@@ -152,6 +154,7 @@ const MapSearch = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("ranking");
   // const [isComplexSearch, setIsComplexSearch] = useState(true); // 단지명 검색 여부 (임시로 true로 설정)
+  const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
 
   const propertyListRef = useRef<HTMLDivElement>(null);
 
@@ -243,6 +246,54 @@ const MapSearch = () => {
     setCurrentPage(1);
   };
 
+    const handlePropertyClick = (propertyId: number) => {
+    navigate(`/property/${propertyId}`);
+  };
+
+  // 면적별 시세 데이터 (단지 정보용)
+  const complexPriceInfo = [
+    {
+      area: "20평대",
+      minPrice: "7억 5천만원",
+      avgPrice: "8억 2천만원",
+      count: 24,
+      sampleProperty: {
+        id: 101,
+        description: "남향, 고층, 풀옵션"
+      }
+    },
+    {
+      area: "24평",
+      minPrice: "8억원",
+      avgPrice: "8억 7천만원",
+      count: 18,
+      sampleProperty: {
+        id: 102,
+        description: "남동향, 중층, 신축"
+      }
+    },
+    {
+      area: "30평대",
+      minPrice: "9억 8천만원",
+      avgPrice: "10억 5천만원",
+      count: 32,
+      sampleProperty: {
+        id: 103,
+        description: "한강뷰, 고층, 프리미엄"
+      }
+    },
+    {
+      area: "40평대",
+      minPrice: "12억원",
+      avgPrice: "13억 2천만원",
+      count: 16,
+      sampleProperty: {
+        id: 104,
+        description: "펜트하우스급, 최고층"
+      }
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -306,6 +357,56 @@ const MapSearch = () => {
                   <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">게스트하우스</span>
                 </div>
               </div>
+
+              {/* 면적별 시세 섹션 추가 */}
+              <div className="mb-3">
+                <Collapsible open={isPriceInfoOpen} onOpenChange={setIsPriceInfoOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between p-0 h-auto font-normal hover:bg-transparent"
+                    >
+                      <p className="text-xs text-real-darkGray">면적별 시세</p>
+                      {isPriceInfoOpen ? (
+                        <ChevronUp className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent className="mt-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                      {complexPriceInfo.map((info, index) => (
+                        <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-sm text-gray-900">{info.area}</span>
+                              <span className="text-xs text-gray-500">({info.count}세대)</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                            <div>
+                              <p className="text-gray-600">최저가</p>
+                              <button
+                                onClick={() => handlePropertyClick(info.sampleProperty.id)}
+                                className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
+                              >
+                                {info.minPrice}
+                              </button>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">평균가</p>
+                              <p className="font-medium text-gray-900">{info.avgPrice}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+
             </div>
           )}
             
