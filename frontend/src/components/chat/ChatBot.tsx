@@ -48,6 +48,13 @@ const ChatBot = forwardRef<any, ChatBotProps>(({ navbarVisible }, ref) => {
   const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollToPosition(0);
+      // console.log("[ChatBot] 최초 진입 시 scrollToPosition(0)");
+    }
+  }, []);
+  
   const handleInputFocus = () => {
     setIsInputFocused(true);
     setAllowAutoScroll(false);  // 포커스 시 자동 스크롤 막기
