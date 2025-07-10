@@ -154,7 +154,7 @@ const MapSearch = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("ranking");
   // const [isComplexSearch, setIsComplexSearch] = useState(true); // 단지명 검색 여부 (임시로 true로 설정)
-  const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
+  const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(true);
 
   const propertyListRef = useRef<HTMLDivElement>(null);
 
