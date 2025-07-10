@@ -26,8 +26,7 @@ const App = () => {
   /* ------------------------------------------------------------- */
 
   return (
-    /* 2) 최상단 래퍼: calc(var(--vh) * 100) */
-    <div style={{ height: "calc(var(--vh, 1vh) * 100)" }} className="h-full">
+    <div className="min-h-screen w-full bg-white flex flex-col"> 
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
