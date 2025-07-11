@@ -505,9 +505,9 @@ const PropertyDetail = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <Tabs defaultValue="property-info">
               <TabsList className="bg-real-lightBlue border-b w-full justify-start rounded-none p-0 h-auto">
-                <TabsTrigger value="property-info" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 md:flex-none">매물 정보</TabsTrigger>
-                <TabsTrigger value="location" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 md:flex-none">위치</TabsTrigger>
-                <TabsTrigger value="reviews" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 md:flex-none">리뷰</TabsTrigger>
+                <TabsTrigger value="property-info" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 text-center">매물 정보</TabsTrigger>
+                <TabsTrigger value="location" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 text-center">위치</TabsTrigger>
+                <TabsTrigger value="reviews" className="py-2.5 md:py-3 px-3 md:px-6 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-real-blue text-xs md:text-sm flex-1 text-center">리뷰</TabsTrigger>
               </TabsList>
               
               <TabsContent value="property-info" className="p-4 md:p-6">
