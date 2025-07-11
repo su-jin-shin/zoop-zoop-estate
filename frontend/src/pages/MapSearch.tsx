@@ -36,7 +36,8 @@ const mapProperties = [
     rentalType: "전세",
     propertyType: "아파트",
     size: "24평",
-    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3"
+    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3",
+    isLowestPrice: true
   },
   {
     id: 2,
@@ -68,7 +69,8 @@ const mapProperties = [
     rentalType: "월세",
     propertyType: "빌라",
     size: "18평",
-    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3"
+    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3",
+    isLowestPrice: true
   },
   {
     id: 5,
@@ -169,6 +171,13 @@ const MapSearch = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Scroll to property list when page changes
+    if (propertyListRef.current) {
+      propertyListRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
   };
 
   const handleSortChange = (value: string) => {

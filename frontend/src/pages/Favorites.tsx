@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import Navbar from "@/components/layout/Navbar";
-import PropertyCard from "@/components/property/PropertyCard";
+import FavoritesPropertyCard from "@/components/property/FavoritesPropertyCard";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
@@ -444,7 +444,7 @@ const Favorites = () => {
                       <div className={isMobile ? "space-y-3" : "grid grid-cols-1 gap-4"}>
                         {getFavoritesPaginated().map(property => (
                           <div key={property.id} className="w-full">
-                            <PropertyCard 
+                            <FavoritesPropertyCard 
                               {...property} 
                               isFavoriteDefault
                               onRemove={() => handleHeartClick(property.id)}
@@ -540,7 +540,7 @@ const Favorites = () => {
                           const isFavorite = favoriteProperties.some(fp => fp.id === property.id);
                           return (
                             <div key={property.id} className="relative w-full">
-                              <PropertyCard 
+                              <FavoritesPropertyCard 
                                 {...property} 
                                 cardHeight="default"
                                 vertical={isMobile}
