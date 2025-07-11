@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Heart, Share, MapPin, Home, Ruler, Calendar, Star, User, Edit, Bed, Bath, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -225,6 +225,7 @@ const PropertyDetail = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [reviewCurrentPage, setReviewCurrentPage] = useState(1);
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
+  const reviewsSectionRef = useRef<HTMLDivElement>(null);
 
   // 리뷰 페이징 설정
   const reviewsPerPage = 4;
@@ -268,6 +269,17 @@ const PropertyDetail = () => {
   
   const handlePropertyClick = (propertyId: number) => {
     navigate(`/property/${propertyId}`);
+  };
+
+  const handleReviewPageChange = (page: number) => {
+    setReviewCurrentPage(page);
+    // Scroll to reviews section when page changes
+    if (reviewsSectionRef.current) {
+      reviewsSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
   };
 
   useEffect(() => {
@@ -684,7 +696,7 @@ const PropertyDetail = () => {
                   </Card>
 
                   {/* 리뷰 작성 버튼 */}
-                  <div className="flex justify-between items-center">
+                  <div ref={reviewsSectionRef} className="flex justify-between items-center">
                     <h3 className="font-medium text-base md:text-lg">리뷰 ({reviews.length})</h3>
                     <Button
                       onClick={() => setShowReviewForm(!showReviewForm)}
