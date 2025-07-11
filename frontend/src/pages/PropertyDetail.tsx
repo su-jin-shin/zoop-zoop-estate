@@ -106,7 +106,13 @@ const propertyData = {
         }
       }
     ]
-  }
+  },
+  nearbyFacilities: [
+    { name: "역삼역", distance: "도보 5분", type: "지하철" },
+    { name: "이마트", distance: "도보 3분", type: "마트" },
+    { name: "삼성서울병원", distance: "차량 10분", type: "병원" },
+    { name: "역삼초등학교", distance: "도보 8분", type: "학교" }
+  ]
 };
 
 // Mock reviews data - 페이징을 위한 더 많은 데이터
@@ -556,15 +562,34 @@ const PropertyDetail = () => {
               </TabsContent>
               
               <TabsContent value="location" className="p-4 md:p-6">
-                <h3 className="font-medium text-base md:text-lg mb-3">위치 정보</h3>
-                <div className="bg-gray-200 h-48 md:h-64 rounded-lg flex items-center justify-center">
-                  <p className="text-real-darkGray text-sm md:text-base text-center px-4">지도 영역 (실제 앱에서는 지도 API 통합)</p>
+                <div className="mb-4 md:mb-6">
+                  <h3 className="font-medium text-base md:text-lg mb-3">위치 정보</h3>
+                  <div className="bg-gray-200 h-48 md:h-64 rounded-lg flex items-center justify-center">
+                    <p className="text-real-darkGray text-sm md:text-base text-center px-4">지도 영역 (실제 앱에서는 지도 API 통합)</p>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-real-darkGray text-sm md:text-base flex items-start">
+                      <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                      <span>{propertyData.address}</span>
+                    </p>
+                  </div>
                 </div>
+
+                <Separator />
+
                 <div className="mt-4">
-                  <p className="text-real-darkGray text-sm md:text-base flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>{propertyData.address}</span>
-                  </p>
+                  <h4 className="font-medium mb-3">주변 편의시설</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {propertyData.nearbyFacilities.map((facility, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{facility.name}</p>
+                          <p className="text-xs text-gray-500">{facility.type}</p>
+                        </div>
+                        <span className="text-xs text-gray-600">{facility.distance}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
               
