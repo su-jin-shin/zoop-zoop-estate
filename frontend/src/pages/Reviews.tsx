@@ -329,7 +329,7 @@ const Reviews = () => {
                                 </div>
                                 
                                 <div>
-                                  <p className="text-xs font-medium text-gray-700 mb-1">리뷰 내용</p>
+                                  <p className="text-xs font-medium text-gray-700 mb-1">거주 후기</p>
                                   <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded-md leading-relaxed">
                                     {review.comment}
                                   </p>

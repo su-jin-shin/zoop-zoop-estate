@@ -722,7 +722,7 @@ const PropertyDetail = () => {
 
                   {/* 리뷰 작성 버튼 */}
                   <div ref={reviewsSectionRef} className="flex justify-between items-center">
-                    <h3 className="font-medium text-base md:text-lg">리뷰 ({reviews.length})</h3>
+                    <h3 className="font-medium text-base md:text-lg">거주 후기 ({reviews.length})</h3>
                     <Button
                       onClick={() => setShowReviewForm(!showReviewForm)}
                       variant="outline"
@@ -752,7 +752,7 @@ const PropertyDetail = () => {
                             <Label htmlFor="review" className="text-xs md:text-sm font-medium">리뷰</Label>
                             <Textarea
                               id="review"
-                              placeholder="이 매물에 대한 리뷰를 작성해주세요..."
+                              placeholder="이 매물에 대한 거주 후기를 작성해주세요..."
                               value={newReview}
                               onChange={(e) => setNewReview(e.target.value)}
                               className="mt-1 text-sm"
