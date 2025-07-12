@@ -25,7 +25,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="fixed inset-0 bg-gray-50 overflow-hidden">
       {/* Hover trigger area for navbar - smaller on mobile */}
       <div 
         className="absolute top-0 left-0 w-full h-4 sm:h-5 z-40"
