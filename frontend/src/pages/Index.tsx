@@ -3,6 +3,7 @@ import HeroSection from "@/components/home/HeroSection";
 import SearchFilters from "@/components/layout/SearchFilters";
 import Navbar from "@/components/layout/Navbar";
 import ChatBotToggle from "@/components/chat/ChatBotToggle";
+import ZoopLogo from "@/components/logo/ZoopLogo";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -33,7 +34,10 @@ const Index = () => {
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="flex flex-col items-center">
             <div className="mb-4 text-center">
-              <h2 className="text-lg font-bold text-real-blue mb-2">줍줍</h2>
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <ZoopLogo className="text-real-blue" />
+                <h2 className="text-lg font-bold text-real-blue">줍줍</h2>
+              </div>
               <p className="text-sm text-real-darkGray">당신의 완벽한 집을 찾아보세요</p>
             </div>
             
