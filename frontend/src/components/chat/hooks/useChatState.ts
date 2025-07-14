@@ -60,7 +60,9 @@ export const useChatState = () => {
   const [propertiesShown, setPropertiesShown] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
   const [showPropertyList, setShowPropertyList] = useState(false);
-  
+  const [newChatLabelMap, setNewChatLabelMap] = useState<Record<number, string>>({
+    1: "새 대화"
+  });
   const currentChat = chatHistories.find(chat => chat.id === currentChatId) || chatHistories[0];
   const messages = currentChat.messages;
   
@@ -510,6 +512,19 @@ export const useChatState = () => {
     addBotMessage(locationQuestion);
   };
 
+  const getNextNewChatLabel = (labelMap: Record<number, string>): string => {
+    const existingNumbers = Object.values(labelMap)
+      .map(label => {
+        if (label === "새 대화") return 1;
+        const match = label.match(/^새 대화\((\d+)\)$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((n): n is number => n !== null);
+
+    const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+    return nextNumber === 1 ? "새 대화" : `새 대화(${nextNumber})`;
+  };
+
   const startNewChat = () => {
     const newChatId = Math.max(...chatHistories.map(chat => chat.id)) + 1;
     const newChat: ChatHistory = {
@@ -518,11 +533,17 @@ export const useChatState = () => {
       messages: [initialMessage],
       timestamp: new Date(),
     };
-    
+
     setChatHistories(prev => [...prev, newChat]);
     setCurrentChatId(newChatId);
-    
-    // 완전히 초기 상태로 리셋
+
+    const label = getNextNewChatLabel(newChatLabelMap);
+    setNewChatLabelMap(prev => ({
+      ...prev,
+      [newChatId]: label,
+    }));
+
+    // reset states
     setPreferences({ step: -1 });
     setSelectedOption("");
     setSelectedOptions([]);
@@ -640,6 +661,12 @@ export const useChatState = () => {
       const remainingChats = chatHistories.filter(chat => chat.id !== chatId);
       setChatHistories([...remainingChats, newChat]);
       setCurrentChatId(newChatId);
+
+      const label = getNextNewChatLabel(newChatLabelMap);
+      setNewChatLabelMap(prev => ({
+        ...prev,
+        [newChatId]: label,
+      }));
       
       // Reset all state to initial values
       setPreferences({ step: -1 });
@@ -666,6 +693,13 @@ export const useChatState = () => {
         
         setChatHistories([newChat]);
         setCurrentChatId(newChatId);
+
+        const label = getNextNewChatLabel(newChatLabelMap);
+        setNewChatLabelMap(prev => ({
+          ...prev,
+          [newChatId]: label,
+        }));
+
         setPreferences({ step: -1 });
         setSelectedOption("");
         setInput("");
@@ -721,5 +755,6 @@ export const useChatState = () => {
     deleteChat,
     handleShowPropertyList,
     handleBackToChat,
+    newChatLabelMap,
   };
 };

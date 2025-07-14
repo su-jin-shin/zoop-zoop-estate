@@ -25,6 +25,7 @@ type ChatHeaderProps = {
   setShowMapView?: (show: boolean) => void;
   showPropertyList?: boolean;
   onBackToChat?: () => void;
+  newChatLabelMap: Record<number, string>;
 };
 
 const ChatHeader = ({ 
@@ -37,15 +38,25 @@ const ChatHeader = ({
   showMapView,
   setShowMapView,
   showPropertyList,
-  onBackToChat
+  onBackToChat,
+  newChatLabelMap,
 }: ChatHeaderProps) => {
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 640px)");
-
-  const currentChat = chatHistories.find(chat => chat.id === currentChatId);
   
+  const getDropdownDisplayTitle = (chat: ChatHistory) => {
+    // title이 "줍줍"이면 labelMap 사용 (유저 메시지 유무 상관 없음)
+    if (chat.title === "줍줍") {
+      return newChatLabelMap[chat.id] || "새 대화";
+    }
+
+    return chat.title;
+  };
+  
+  const currentChat = chatHistories.find(chat => chat.id === currentChatId);
+   
   // Check if any chat in the history has user messages
   const hasAnyUserMessages = chatHistories.some(chat => 
     chat.messages.some(message => message.isUser)
@@ -206,7 +217,7 @@ const ChatHeader = ({
                               </div>
                             ) : (
                               <span className="text-xs truncate block">
-                                {chat.title}
+                                {getDropdownDisplayTitle(chat)}
                               </span>
                             )}
                           </div>

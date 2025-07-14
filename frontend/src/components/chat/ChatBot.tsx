@@ -39,6 +39,7 @@ const ChatBot = forwardRef<any, ChatBotProps>(({ navbarVisible }, ref) => {
     handleShowPropertyList,
     handleBackToChat,
     handleCancelFilter,
+    newChatLabelMap,
   } = useChatState();
 
   const messagesContainerRef = useRef<ChatMessagesListRef>(null);
@@ -231,6 +232,7 @@ const ChatBot = forwardRef<any, ChatBotProps>(({ navbarVisible }, ref) => {
         setShowMapView={setShowMapView}
         showPropertyList={showPropertyList}
         onBackToChat={handleBackToChat}
+        newChatLabelMap={newChatLabelMap}
       />
 
       {renderMainContent()}
