@@ -22,10 +22,7 @@ const ChatMessage = ({ message, onButtonClick, onShowMapView, onShowMoreProperti
   const messageContent = useMemo(() => message.text, [message.text]);
   
   // Memoize whether this message contains property items
-  const hasPropertyItems = useMemo(() => 
-    messageContent.includes('property-item'), 
-    [messageContent]
-  );
+  const hasPropertyItems = message.hasPropertyItems === true;
 
   // Handle visibility animation
   useEffect(() => {
@@ -89,11 +86,10 @@ const ChatMessage = ({ message, onButtonClick, onShowMapView, onShowMoreProperti
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 transition-all duration-300",
+        "flex items-start gap-2.5",
         message.isUser ? "ml-auto flex-row-reverse" : "mr-auto",
         // 매물 리스트가 있는 메시지는 더 넓은 너비 사용
-        hasPropertyItems ? "max-w-[95%]" : "max-w-[80%]",
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        hasPropertyItems ? "max-w-[95%] min-w-[95%]" : "max-w-[80%]"
       )}
     >
       <div
@@ -107,10 +103,13 @@ const ChatMessage = ({ message, onButtonClick, onShowMapView, onShowMoreProperti
       <div
         ref={messageRef}
         className={cn(
+          "transition-opacity transition-transform duration-300",
+          hasPropertyItems && "w-full",
           "p-3 rounded-lg",
           message.isUser
             ? "bg-real-blue text-white rounded-tr-none"
-            : "bg-gray-100 rounded-tl-none"
+            : "bg-gray-100 rounded-tl-none",
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}
       >
         <div 

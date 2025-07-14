@@ -8,6 +8,7 @@ export type Message = {
   inputType?: 'search' | 'select' | 'radio' | 'input' | 'button' | 'checkbox';
   searchOptions?: string[];
   buttonText?: string;
+  hasPropertyItems?: boolean;
 };
 
 export type ChatHistory = {

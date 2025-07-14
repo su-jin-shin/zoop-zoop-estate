@@ -267,7 +267,8 @@ export const useChatState = () => {
           id: Date.now(), // 고유한 ID 사용
           text: recommendationsHTML,
           isUser: false,
-          timestamp: new Date()
+          timestamp: new Date(),
+          hasPropertyItems: true
         });
         
         setPropertiesShown(true);
