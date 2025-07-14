@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChatHistory } from "./types/chatTypes";
 import { useNavigate } from "react-router-dom";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 type ChatHeaderProps = {
   chatHistories: ChatHistory[];
@@ -41,6 +42,7 @@ const ChatHeader = ({
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const currentChat = chatHistories.find(chat => chat.id === currentChatId);
   
@@ -118,6 +120,9 @@ const ChatHeader = ({
   // Display title as "줍줍" when current chat has no user messages
   const currentChatHasUserMessages = currentChat && currentChat.messages.some(message => message.isUser);
   const displayTitle = currentChatHasUserMessages ? (currentChat?.title || "줍줍") : "줍줍";
+
+  // Check if the title is in property recommendation format (contains " / ")
+  const isPropertyRecommendationTitle = displayTitle.includes(" / ") && displayTitle !== "줍줍";
 
   return (
     <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white">
@@ -222,7 +227,12 @@ const ChatHeader = ({
         </DropdownMenu>
         
         {/* 개선된 제목 표시 - 긴 제목 처리 */}
-        <h2 className="font-semibold text-base sm:text-lg truncate min-w-0 flex-1 mr-2">
+        {/* Updated title display with conditional mobile font size */}
+        <h2 className={`font-semibold truncate min-w-0 flex-1 mr-2 ${
+          isPropertyRecommendationTitle && isMobile 
+            ? 'text-sm' 
+            : 'text-base sm:text-lg'
+        }`}>
           {displayTitle}
         </h2>
       </div>
