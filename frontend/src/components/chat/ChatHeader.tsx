@@ -1,317 +1,297 @@
+
+import { useState } from "react";
+import { MessageSquare, Edit2, Trash2, ArrowLeft, PenSquare, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Menu, PenSquare, Pencil, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { ChatHistory } from "./types/chatTypes";
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 type ChatHeaderProps = {
   chatHistories: ChatHistory[];
   currentChatId: number;
   switchToChat: (chatId: number) => void;
   startNewChat: () => void;
-  editChatTitle?: (chatId: number, newTitle: string) => void;
-  deleteChat?: (chatId: number) => void;
+  editChatTitle: (chatId: number, newTitle: string) => void;
+  deleteChat: (chatId: number) => void;
   showMapView?: boolean;
-  setShowMapView?: (value: boolean) => void;
+  setShowMapView?: (show: boolean) => void;
+  showPropertyList?: boolean;
+  onBackToChat?: () => void;
+  newChatLabelMap: Record<number, string>;
 };
 
 const ChatHeader = ({ 
   chatHistories, 
   currentChatId, 
   switchToChat, 
-  startNewChat,
-  editChatTitle,
-  deleteChat
+  startNewChat, 
+  editChatTitle, 
+  deleteChat,
+  showMapView,
+  setShowMapView,
+  showPropertyList,
+  onBackToChat,
+  newChatLabelMap,
 }: ChatHeaderProps) => {
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
-  const [editingTitle, setEditingTitle] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [chatToDelete, setChatToDelete] = useState<number | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  
+  const getDropdownDisplayTitle = (chat: ChatHistory) => {
+    // title이 "줍줍"이면 labelMap 사용 (유저 메시지 유무 상관 없음)
+    if (chat.title === "줍줍") {
+      return newChatLabelMap[chat.id] || "새 대화";
+    }
 
-  // Find the current chat from chat histories
+    return chat.title;
+  };
+  
   const currentChat = chatHistories.find(chat => chat.id === currentChatId);
-  
-  // Check if current chat only has the initial message
-  const isInitialMessageOnly = currentChat && currentChat.messages.length === 1 && currentChat.messages[0].id === 1;
+   
+  // Check if any chat in the history has user messages
+  const hasAnyUserMessages = chatHistories.some(chat => 
+    chat.messages.some(message => message.isUser)
+  );
 
-  // Filter out chats that only have the initial message for the history dropdown
-  // 수정: 첫 메시지만 있는 모든 채팅을 완전히 제외
-  const filteredChatHistories = chatHistories.filter(chat => {
-    // 메시지가 1개뿐이고 그 메시지의 ID가 1인 경우 (초기 메시지) 제외
-    if (chat.messages.length === 1 && chat.messages[0].id === 1) {
-      return false;
+  // Get chats that have user messages for the dropdown
+  const chatsWithUserMessages = chatHistories.filter(chat => 
+    chat.messages.some(message => message.isUser)
+  );
+
+  // Sort chat histories by timestamp (latest first)
+  const sortedChatHistories = [...chatsWithUserMessages].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+
+  // Group chats by date
+  const groupedChats = sortedChatHistories.reduce((groups, chat) => {
+    const date = new Date(chat.timestamp);
+    const dateKey = date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }).replace(/\. /g, '.').replace(/\.$/, '');
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
     }
-    // 사용자가 실제로 메시지를 보낸 경우만 포함 (isUser: true인 메시지가 있는 경우)
-    return chat.messages.some(message => message.isUser === true);
-  });
+    groups[dateKey].push(chat);
+    return groups;
+  }, {} as Record<string, ChatHistory[]>);
 
-  // Generate display title for chat history list (not for main header)
-  const generateChatHistoryTitle = (chat: ChatHistory) => {
-    if (chat.title !== "줍줍") return chat.title;
-    
-    // For chats with default title "줍줍", use the chat ID to determine display name
-    if (chat.id === 1) {
-      return "새 대화";
-    }
-    
-    // For subsequent chats, show "새 대화 (n)" where n is the chat ID
-    return `새 대화 (${chat.id})`;
-  };
-
-  // Generate header title (for main header display)
-  const generateHeaderTitle = () => {
-    if (!currentChat) return "줍줍";
-    
-    // If the chat title is still the default "줍줍", show "줍줍"
-    if (currentChat.title === "줍줍") {
-      return "줍줍";
-    }
-    
-    // Otherwise, show the actual title (which will be the filter conditions)
-    return currentChat.title;
-  };
-
-  const handleStartEdit = (chatId: number, currentTitle: string) => {
-    console.log('Starting edit for chat:', chatId, 'with title:', currentTitle);
+  const handleEditStart = (chatId: number, currentTitle: string) => {
     setEditingChatId(chatId);
-    // Use the display title for editing, not the raw title
-    const displayTitle = chatHistories.find(c => c.id === chatId)?.title === "줍줍" 
-      ? generateChatHistoryTitle(chatHistories.find(c => c.id === chatId)!)
-      : currentTitle;
-    setEditingTitle(displayTitle);
+    setEditTitle(currentTitle);
   };
 
-  const handleSaveEdit = (chatId: number) => {
-    console.log('Saving edit for chat:', chatId, 'with new title:', editingTitle.trim());
-    if (editingTitle.trim() !== "" && editChatTitle) {
-      editChatTitle(chatId, editingTitle.trim());
-      console.log('Edit saved successfully');
+  const handleEditSave = () => {
+    if (editingChatId && editTitle.trim()) {
+      editChatTitle(editingChatId, editTitle.trim());
     }
     setEditingChatId(null);
-    setEditingTitle("");
+    setEditTitle("");
   };
 
-  const handleCancelEdit = () => {
-    console.log('Canceling edit');
+  const handleEditCancel = () => {
     setEditingChatId(null);
-    setEditingTitle("");
+    setEditTitle("");
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent, chatId: number) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSaveEdit(chatId);
-    } else if (e.key === "Escape") {
-      handleCancelEdit();
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleEditSave();
+    } else if (e.key === 'Escape') {
+      handleEditCancel();
     }
   };
 
-  const handleDeleteClick = (chatId: number) => {
-    setChatToDelete(chatId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (chatToDelete && deleteChat) {
-      deleteChat(chatToDelete);
+  const handleBackButton = () => {
+    if (showPropertyList && onBackToChat) {
+      onBackToChat();
+    } else {
+      navigate(-1);
     }
-    setDeleteDialogOpen(false);
-    setChatToDelete(null);
-    setDropdownOpen(false);
   };
 
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setChatToDelete(null);
+  const handleDeleteChat = (chatId: number) => {
+    deleteChat(chatId);
   };
 
-  const handleNewChatClick = () => {
-    // Prevent creating new chat if current chat only has initial message
-    if (isInitialMessageOnly) {
-      return;
-    }
-    startNewChat();
-  };
-
-  const handleChatSelect = (chatId: number) => {
-    switchToChat(chatId);
-    setDropdownOpen(false);
-  };
-
-  // Sort filtered chat histories by ID in descending order (newest first)
-  const sortedChatHistories = [...filteredChatHistories].sort((a, b) => b.id - a.id);
-  
-  return (
-    <div className="bg-real-blue text-white p-4 flex items-center relative">
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen} modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-real-blue/90">
-            <Menu className="h-5 w-5" />
+  if (showMapView) {
+    return (
+      <div className="flex items-center justify-between p-4 border-b bg-white">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowMapView?.(false)}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="start" 
-          className="w-80 bg-white z-50"
-          sideOffset={8}
-          style={{
-            maxHeight: '400px',
-            overflowY: 'auto'
-          }}
-          onCloseAutoFocus={(e) => e.preventDefault()}
-        >
-          <div className="flex items-center justify-between px-3 py-2 border-b">
-            <span className="font-medium">대화 기록</span>
-          </div>
-          {sortedChatHistories.length === 0 ? (
-            <div className="px-3 py-4 text-center text-gray-500 text-sm">
-              아직 대화 기록이 없습니다
-            </div>
-          ) : (
-            sortedChatHistories.map((chat) => (
-              <DropdownMenuItem 
-                key={chat.id} 
-                className={cn(
-                  "flex items-center py-2 px-3", 
-                  currentChatId === chat.id ? "bg-slate-100" : ""
-                )}
-                onSelect={(e) => e.preventDefault()}
-              >
-                <div className="flex-1 flex items-center">
-                  {editingChatId === chat.id ? (
-                    <div className="flex-1 flex items-center gap-2">
-                      <Input
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, chat.id)}
-                        className="flex-1 h-8 text-sm border-blue-500"
-                      />
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-gray-200 text-green-600 hover:text-green-700"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSaveEdit(chat.id);
-                          }}
-                        >
-                          ✓
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-gray-200 text-red-500 hover:text-red-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCancelEdit();
-                          }}
-                        >
-                          ✕
-                        </Button>
-                      </div>
+          <h2 className="font-semibold text-lg">매물 지도</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Display title as "줍줍" when current chat has no user messages
+  const currentChatHasUserMessages = currentChat && currentChat.messages.some(message => message.isUser);
+  const displayTitle = currentChatHasUserMessages ? (currentChat?.title || "줍줍") : "줍줍";
+
+  // Check if the title is in property recommendation format (contains " / ")
+  const isPropertyRecommendationTitle = displayTitle.includes(" / ") && displayTitle !== "줍줍";
+
+  return (
+    <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white">
+      <div className="flex items-center min-w-0 flex-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="mr-2 flex-shrink-0">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64 bg-white border shadow-lg z-50">
+            <div className="max-h-64 overflow-y-auto">
+              {hasAnyUserMessages ? (
+                Object.entries(groupedChats).map(([date, chats], groupIndex) => (
+                  <div key={date}>
+                    {groupIndex > 0 && <DropdownMenuSeparator />}
+                    <div className="px-2 py-1.5 text-xs font-medium text-gray-500">
+                      {date}
                     </div>
-                  ) : (
-                    <>
-                      <div 
-                        className="flex-1 cursor-pointer"
-                        onClick={() => handleChatSelect(chat.id)}
-                      >
-                        <span className="truncate block">
-                          {generateChatHistoryTitle(chat)}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {chat.timestamp.toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 ml-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-gray-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStartEdit(chat.id, generateChatHistoryTitle(chat));
+                    {chats.map((chat) => (
+                      <div key={chat.id} className="group">
+                        <DropdownMenuItem
+                          className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 ${
+                            chat.id === currentChatId ? 'bg-gray-100' : ''
+                          }`}
+                          onClick={() => editingChatId !== chat.id && switchToChat(chat.id)}
+                          onSelect={(e) => {
+                            if (editingChatId === chat.id) {
+                              e.preventDefault();
+                            }
                           }}
                         >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-gray-200 text-red-500 hover:text-red-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(chat.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                          <div className="flex-1 min-w-0">
+                            {editingChatId === chat.id ? (
+                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Input
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  onKeyDown={handleKeyDown}
+                                  className="h-6 text-xs flex-1"
+                                  autoFocus
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-green-600 hover:text-green-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditSave();
+                                  }}
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditCancel();
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs truncate block">
+                                {getDropdownDisplayTitle(chat)}
+                              </span>
+                            )}
+                          </div>
+                          {editingChatId !== chat.id && (
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditStart(chat.id, chat.title);
+                                }}
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-red-500 hover:text-red-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteChat(chat.id);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </DropdownMenuItem>
                       </div>
-                    </>
-                  )}
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-sm text-gray-500">
+                  대화를 시작해보세요!
                 </div>
-              </DropdownMenuItem>
-            ))
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <h2 className="font-bold flex-1 text-center">
-        {generateHeaderTitle()}
-      </h2>
-
-      <div className="flex items-center gap-3 mr-2">
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* 개선된 제목 표시 - 긴 제목 처리 */}
+        {/* Updated title display with conditional mobile font size */}
+        <h2 className={`font-semibold truncate min-w-0 flex-1 mr-2 ${
+          isPropertyRecommendationTitle && isMobile 
+            ? 'text-sm' 
+            : 'text-base sm:text-lg'
+        }`}>
+          {displayTitle}
+        </h2>
+      </div>
+      
+      {/* 오른쪽 버튼들 - 항상 보이도록 */}
+      <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
         <Button 
-          variant="ghost" 
+          onClick={startNewChat}
+          variant="ghost"
           size="icon"
-          onClick={handleNewChatClick}
-          disabled={isInitialMessageOnly}
-          className={cn(
-            "text-white hover:bg-real-blue/70",
-            isInitialMessageOnly && "opacity-50 cursor-not-allowed hover:bg-real-blue"
-          )}
+          disabled={!hasAnyUserMessages}
+          className="h-8 w-8 sm:h-9 sm:w-9"
         >
-          <PenSquare className="h-5 w-5" />
+          <PenSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+        </Button>
+        <Button 
+          onClick={handleBackButton}
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 sm:h-9 sm:w-9"
+        >
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-white">
-          <DialogHeader>
-            <DialogTitle>대화 삭제</DialogTitle>
-            <DialogDescription>
-              정말로 이 대화를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleDeleteCancel}>
-              취소
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteConfirm}
-            >
-              삭제
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

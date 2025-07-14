@@ -73,13 +73,35 @@
   }
 
   html {
-    overflow-y: scroll;
-    scrollbar-gutter: stable;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    overflow-x: hidden !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  /* 레이아웃 시프트 완전 방지 */
+  #root {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* 포털로 생성되는 요소들이 레이아웃에 영향주지 않도록 */
+  [data-radix-portal] {
+    position: fixed !important;
+    z-index: 9999 !important;
   }
 }
 
@@ -104,4 +126,10 @@
 /* Add cursor pointer to property items */
 .property-item {
   cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px !important;   /* iOS 확대 방지용 */
 }

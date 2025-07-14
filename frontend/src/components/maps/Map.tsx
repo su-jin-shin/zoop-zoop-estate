@@ -32,7 +32,7 @@ const Map = () => {
           <Button 
             size="sm" 
             variant="outline" 
-            className="absolute bottom-2 right-2 z-10 bg-white text-real-darkGray hover:bg-gray-100 text-xs h-6 px-2 py-0 shadow-md border"
+            className="absolute bottom-3 right-2 z-10 bg-white text-real-darkGray hover:bg-gray-100 text-xs h-6 px-2 py-0 shadow-md border"
           >
             <Maximize className="h-3 w-3 mr-1" />
             전체화면

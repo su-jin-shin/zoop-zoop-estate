@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
+import { formatPriceInput } from "@/lib/priceUtils";
 
 type TextInputProps = {
   input: string;
@@ -12,7 +13,9 @@ type TextInputProps = {
   showSkip?: boolean;
   questionId?: number;
   handleBackButton?: () => void;
-  isLastQuestion?: boolean; // 추가: 마지막 질문 여부
+  isLastQuestion?: boolean;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 };
 
 const TextInput = ({ 
@@ -24,16 +27,25 @@ const TextInput = ({
   showSkip = false,
   questionId,
   handleBackButton,
-  isLastQuestion = false // 기본값: false
+  isLastQuestion = false,
+  onInputFocus,
+  onInputBlur,
 }: TextInputProps) => {
   // Determine if the button should be disabled
-  // Only disable for price question (5), always enable for deposit question (6)
   const isPriceQuestion = questionId === 5;
   const isDepositQuestion = questionId === 6;
   const isPriceOrDepositQuestion = isPriceQuestion || isDepositQuestion;
   
-  // Only disable button for price question with empty input
-  const isButtonDisabled = isPriceQuestion && input.trim() === '';
+  // Check if input is effectively zero (handles "0", "00", "000", etc.)
+  const isEffectivelyZero = input.trim() !== '' && parseInt(input.trim()) === 0;
+  
+  // For price question (5): disable if empty or effectively zero
+  // For deposit question (6): only disable if effectively zero (empty is allowed)
+  const isButtonDisabled = isPriceQuestion 
+    ? (input.trim() === '' || isEffectivelyZero)
+    : isDepositQuestion 
+    ? isEffectivelyZero
+    : false;
 
   // Handle number-only input for price and deposit fields
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +69,10 @@ const TextInput = ({
     return "다음";
   };
 
+  // Show price hint for price and deposit questions
+  const showPriceHint = (questionId === 5 || questionId === 6) && input.trim() !== '';
+  const priceHint = showPriceHint ? formatPriceInput(input) : '';
+
   return (
     <div className="flex flex-col gap-2">
       <Input
@@ -65,8 +81,15 @@ const TextInput = ({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="flex-1"
+        className="flex-1 text-base"
+        onFocus={onInputFocus}
+        onBlur={onInputBlur}
       />
+      {showPriceHint && priceHint && (
+        <div className="text-xs text-gray-500 px-1">
+          입력하신 금액: {priceHint}
+        </div>
+      )}
       <div className="flex gap-2">
         {/* For price and deposit questions (5 and 6), show back button */}
         {(questionId === 5 || questionId === 6) && handleBackButton ? (

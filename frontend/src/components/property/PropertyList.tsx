@@ -74,8 +74,8 @@ const properties = [
 const PropertyList = () => {
   return (
     <div className="space-y-3">
-      {properties.map(property => (
-        <PropertyCard key={property.id} {...property} />
+      {properties.map((property) => (
+        <PropertyCard key={property.id} {...property} cardHeight="tall" />
       ))}
     </div>
   );

@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+
+import React, { useState } from "react";
 import { Search, List, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import PropertyCard from "@/components/property/PropertyCard";
 import Map from "@/components/maps/Map";
 import { PropertyPreferences } from "./types/chatTypes";
-import { ChatMessagesListRef } from "./ChatMessagesList";
+// import { ChatMessagesListRef } from "./ChatMessagesList"; // 더 이상 필요 없음
 
 // Mock properties for the map view
 const mapProperties = [
@@ -47,10 +48,10 @@ const mapProperties = [
 type MapViewInChatProps = {
   onBackToChat: () => void;
   preferences: PropertyPreferences;
-  messagesContainerRef: React.RefObject<ChatMessagesListRef>;
+  // messagesContainerRef: React.RefObject<ChatMessagesListRef>; // 제거됨
 };
 
-const MapViewInChat = ({ onBackToChat, preferences, messagesContainerRef }: MapViewInChatProps) => {
+const MapViewInChat = ({ onBackToChat, preferences }: MapViewInChatProps) => {
   const [showList, setShowList] = useState(false);
 
   const handleBackToChat = () => {
@@ -122,7 +123,7 @@ const MapViewInChat = ({ onBackToChat, preferences, messagesContainerRef }: MapV
           </div>
           
           <ScrollArea className="flex-1 p-3">
-            <div className="space-y-3 pb-4">
+            <div className="space-y-3 pb-10">
               {mapProperties.map((property) => (
                 <div key={property.id}>
                   <PropertyCard {...property} />

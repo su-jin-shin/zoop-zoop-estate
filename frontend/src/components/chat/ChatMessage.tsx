@@ -9,9 +9,11 @@ import { useEffect, useRef, useState, useMemo } from "react";
 type ChatMessageProps = {
   message: Message;
   onButtonClick?: () => void;
+  onShowMapView?: () => void;
+  onShowMoreProperties?: () => void;
 };
 
-const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
+const ChatMessage = ({ message, onButtonClick, onShowMapView, onShowMoreProperties }: ChatMessageProps) => {
   const navigate = useNavigate();
   const messageRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -20,11 +22,7 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
   const messageContent = useMemo(() => message.text, [message.text]);
   
   // Memoize whether this message contains property items
-  const hasPropertyItems = useMemo(() => 
-    //messageContent.includes('property-item'), 
-    messageContent?.includes('property-item') ?? false, 
-    [messageContent]
-  );
+  const hasPropertyItems = message.hasPropertyItems === true;
 
   // Handle visibility animation
   useEffect(() => {
@@ -35,10 +33,10 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Add click event listener for property items
+  // Add click event listener for property items and buttons
   useEffect(() => {
     const messageElement = messageRef.current;
-    if (!messageElement || !hasPropertyItems) return;
+    if (!messageElement) return;
 
     const propertyItems = messageElement.querySelectorAll('.property-item');
     
@@ -53,20 +51,45 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
     propertyItems.forEach(item => {
       item.addEventListener('click', handlePropertyClick);
     });
+
+    // Handle map view button clicks
+    const handleClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+      
+      console.log('[ChatMessage] Click detected:', target.textContent);
+      
+      // 더 많은 매물 보기 클릭 처리
+      if (target.textContent?.includes('더 많은 매물 보기') || target.classList.contains('show-more-properties')) {
+        event.preventDefault();
+        console.log('[ChatMessage] 더 많은 매물 보기 clicked');
+        onShowMoreProperties?.();
+      }
+      
+      // 지도로 보기 버튼 클릭 처리
+      if (target.closest('.map-view-button') || target.textContent?.includes('지도로 보기')) {
+        event.preventDefault();
+        console.log('[ChatMessage] 지도로 보기 clicked');
+        onShowMapView?.();
+      }
+    };
+
+    messageElement.addEventListener('click', handleClick);
     
     return () => {
       propertyItems.forEach(item => {
         item.removeEventListener('click', handlePropertyClick);
       });
+      messageElement.removeEventListener('click', handleClick);
     };
-  }, [hasPropertyItems, navigate, messageContent]);
+  }, [hasPropertyItems, navigate, messageContent, onShowMapView, onShowMoreProperties]);
 
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 max-w-[80%] transition-all duration-300",
+        "flex items-start gap-2.5",
         message.isUser ? "ml-auto flex-row-reverse" : "mr-auto",
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        // 매물 리스트가 있는 메시지는 더 넓은 너비 사용
+        hasPropertyItems ? "max-w-[95%] min-w-[95%]" : "max-w-[80%]"
       )}
     >
       <div
@@ -80,10 +103,13 @@ const ChatMessage = ({ message, onButtonClick }: ChatMessageProps) => {
       <div
         ref={messageRef}
         className={cn(
+          "transition-opacity transition-transform duration-300",
+          hasPropertyItems && "w-full",
           "p-3 rounded-lg",
           message.isUser
             ? "bg-real-blue text-white rounded-tr-none"
-            : "bg-gray-100 rounded-tl-none"
+            : "bg-gray-100 rounded-tl-none",
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}
       >
         <div 

@@ -1,8 +1,14 @@
 
-import { Heart } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MapPin, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+interface PriceChange {
+  type: "increase" | "decrease";
+  percentage: number;
+}
 
 interface PropertyCardProps {
   id: number;
@@ -14,74 +20,132 @@ interface PropertyCardProps {
   propertyType: string;
   size: string;
   imageUrl: string;
+  isLowestPrice?: boolean;
+  // Additional props used throughout the app
+  cardHeight?: string;
+  vertical?: boolean;
+  isFavoriteDefault?: boolean;
+  onRemove?: () => void;
+  suppressHeart?: boolean;
+  priceChange?: PriceChange;
+  showPriceChangeInBadge?: boolean;
+  sold?: boolean;
   featured?: boolean;
 }
 
-const PropertyCard = ({ 
-  id, 
-  title, 
-  address, 
-  price, 
-  deposit, 
+const PropertyCard = ({
+  id,
+  title,
+  address,
+  price,
+  deposit,
   rentalType,
   propertyType,
   size,
   imageUrl,
-  featured
+  isLowestPrice = false,
+  cardHeight = "default",
+  vertical = false,
+  isFavoriteDefault = false,
+  onRemove,
+  suppressHeart = false,
+  priceChange,
+  showPriceChangeInBadge = false,
+  sold = false,
+  featured = false
 }: PropertyCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(isFavoriteDefault);
+
+  const handleClick = () => {
+    navigate(`/property/${id}`);
+  };
+
+  const handleHeartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onRemove) {
+      onRemove();
+    } else {
+      setIsFavorite(!isFavorite);
+    }
+  };
+
+  const formatPrice = () => {
+    if (rentalType === "전세") {
+      return `전세 ${deposit || price}`;
+    } else if (rentalType === "월세") {
+      return `월세 ${deposit}/${price}`;
+    } else {
+      return `매매 ${price}`;
+    }
+  };
 
   return (
-    <div className={`bg-white rounded-md overflow-hidden shadow-sm hover:shadow-md transition-all ${featured ? 'ring-1 ring-real-blue' : ''} border border-gray-100`}>
-      <div className="flex flex-row">
-        <Link to={`/property/${id}`} className="w-1/3">
-          <div className="relative h-full">
-            <img 
-              src={imageUrl} 
-              alt={title}
-              className="w-full h-full object-cover aspect-square" 
-            />
-            {featured && (
-              <div className="absolute top-0 left-0">
-                <Badge className="rounded-none rounded-br-md bg-real-blue text-[10px]">신규</Badge>
-              </div>
-            )}
-          </div>
-        </Link>
-        
-        <div className="p-2 flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <Badge variant="outline" className="text-[10px] font-normal h-5">
-              {rentalType}
+    <Card 
+      className={`cursor-pointer hover:shadow-md transition-shadow duration-200 overflow-hidden ${
+        isLowestPrice ? "ring-1 ring-real-blue" : ""
+      }`}
+      onClick={handleClick}
+    >
+      <div className="relative">
+        <div className="aspect-video overflow-hidden">
+          <img 
+            src={imageUrl} 
+            alt={title}
+            className="w-full h-full object-cover" 
+          />
+        </div>
+        {isLowestPrice && (
+          <div className="absolute bottom-2 left-2">
+            <Badge className="bg-real-blue text-white text-xs font-medium px-2 py-1">
+              동일 면적 최저가
             </Badge>
-            <button 
-              className="p-1"
-              onClick={() => setIsFavorite(!isFavorite)}
+          </div>
+        )}
+        {!suppressHeart && (
+          <div className="absolute top-2 right-2">
+            <button
+              onClick={handleHeartClick}
+              className="p-1.5 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+              aria-label={isFavorite ? "관심 매물 해제" : "관심 매물 추가"}
             >
-              <Heart 
-                className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
+              <Heart
+                className={`h-4 w-4 ${
+                  isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"
+                }`}
               />
             </button>
           </div>
-          
-          <Link to={`/property/${id}`}>
-            <h3 className="font-medium text-sm mb-0.5 line-clamp-1 hover:text-real-blue transition-colors">
-              {title}
-            </h3>
-          </Link>
-          
-          <p className="text-xs text-real-darkGray mb-1 line-clamp-1">{address}</p>
-          
-          <div className="flex items-end justify-between">
-            <span className="font-bold text-sm text-real-black">
-              {deposit && <span>{deposit} / </span>}
-              {price}
-            </span>
-            <span className="text-[10px] text-gray-500">{propertyType} · {size}</span>
-          </div>
-        </div>
+        )}
       </div>
-    </div>
+      
+      <CardContent className="p-3 md:p-4">
+        <h3 className="font-medium text-sm md:text-base mb-2 line-clamp-2 leading-tight">
+          {title}
+        </h3>
+        
+        <div className="flex items-center text-gray-600 mb-2">
+          <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1 flex-shrink-0" />
+          <span className="text-xs md:text-sm truncate">{address}</span>
+        </div>
+        
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-1 md:space-x-2">
+            <Badge variant="secondary" className="text-xs">
+              {rentalType}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {propertyType}
+            </Badge>
+          </div>
+          <span className="text-xs md:text-sm text-gray-600">{size}</span>
+        </div>
+        
+        <p className="font-bold text-sm md:text-base text-gray-900">
+          {formatPrice()}
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 
