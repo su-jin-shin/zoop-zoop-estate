@@ -61,6 +61,22 @@ const ChatHeader = ({
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
+  // Group chats by date
+  const groupedChats = sortedChatHistories.reduce((groups, chat) => {
+    const date = new Date(chat.timestamp);
+    const dateKey = date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }).replace(/\. /g, '.').replace(/\.$/, '');
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(chat);
+    return groups;
+  }, {} as Record<string, ChatHistory[]>);
+
   const handleEditStart = (chatId: number, currentTitle: string) => {
     setEditingChatId(chatId);
     setEditTitle(currentTitle);
@@ -136,85 +152,93 @@ const ChatHeader = ({
           <DropdownMenuContent align="start" className="w-64 bg-white border shadow-lg z-50">
             <div className="max-h-64 overflow-y-auto">
               {hasAnyUserMessages ? (
-                sortedChatHistories.map((chat) => (
-                  <div key={chat.id} className="group">
-                    <DropdownMenuItem
-                      className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 ${
-                        chat.id === currentChatId ? 'bg-gray-100' : ''
-                      }`}
-                      onClick={() => editingChatId !== chat.id && switchToChat(chat.id)}
-                      onSelect={(e) => {
-                        if (editingChatId === chat.id) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        {editingChatId === chat.id ? (
-                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                            <Input
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              onKeyDown={handleKeyDown}
-                              className="h-6 text-xs flex-1"
-                              autoFocus
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-green-600 hover:text-green-800"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditSave();
-                              }}
-                            >
-                              <Check className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-gray-500 hover:text-gray-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditCancel();
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
+                Object.entries(groupedChats).map(([date, chats], groupIndex) => (
+                  <div key={date}>
+                    {groupIndex > 0 && <DropdownMenuSeparator />}
+                    <div className="px-2 py-1.5 text-xs font-medium text-gray-500">
+                      {date}
+                    </div>
+                    {chats.map((chat) => (
+                      <div key={chat.id} className="group">
+                        <DropdownMenuItem
+                          className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 ${
+                            chat.id === currentChatId ? 'bg-gray-100' : ''
+                          }`}
+                          onClick={() => editingChatId !== chat.id && switchToChat(chat.id)}
+                          onSelect={(e) => {
+                            if (editingChatId === chat.id) {
+                              e.preventDefault();
+                            }
+                          }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            {editingChatId === chat.id ? (
+                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Input
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  onKeyDown={handleKeyDown}
+                                  className="h-6 text-xs flex-1"
+                                  autoFocus
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-green-600 hover:text-green-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditSave();
+                                  }}
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditCancel();
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs truncate block">
+                                {chat.title}
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <span className="text-xs truncate block">
-                            {chat.title}
-                          </span>
-                        )}
+                          {editingChatId !== chat.id && (
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditStart(chat.id, chat.title);
+                                }}
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-red-500 hover:text-red-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteChat(chat.id);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </DropdownMenuItem>
                       </div>
-                      {editingChatId !== chat.id && (
-                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditStart(chat.id, chat.title);
-                            }}
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-red-500 hover:text-red-700"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteChat(chat.id);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </DropdownMenuItem>
+                    ))}
                   </div>
                 ))
               ) : (
