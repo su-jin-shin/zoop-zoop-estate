@@ -102,11 +102,6 @@ const RegisteredNotificationsList = ({
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-            <div className="text-center mt-2">
-              <span className="text-xs text-gray-500">
-                페이지 {currentPage} / {totalPages} (총 {notifications.length}개)
-              </span>
-            </div>
           </div>
         </div>
       </CardContent>
