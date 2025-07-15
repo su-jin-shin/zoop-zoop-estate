@@ -104,7 +104,7 @@ const ChatMessage = ({ message, onButtonClick, onShowMapView, onShowMoreProperti
         ref={messageRef}
         className={cn(
           "transition-opacity transition-transform duration-300",
-          hasPropertyItems && "w-full",
+          hasPropertyItems ? "w-full md:w-auto" : "max-w-[80%]",
           "p-3 rounded-lg",
           message.isUser
             ? "bg-real-blue text-white rounded-tr-none"
