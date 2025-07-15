@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingDown, TrendingUp, Eye, EyeOff } from "lucide-react";
-import PropertyCard from "@/components/property/PropertyCard";
+import NotificationPropertyCard from "@/components/property/NotificationPropertyCard";
 
 interface Property {
   id: number;
@@ -84,7 +84,7 @@ const ReceivedNotificationCard = ({
           <p className="text-xs text-gray-500 mb-2">{notification.notificationDescription}</p>
         )}
         <div className="w-full">
-          <PropertyCard
+          <NotificationPropertyCard
             {...notification.property}
             cardHeight="default"
             suppressHeart={true}

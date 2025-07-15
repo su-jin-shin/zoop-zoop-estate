@@ -104,11 +104,6 @@ const ReceivedNotificationsList = ({
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-        <div className="text-center mt-2">
-          <span className="text-xs text-gray-500">
-            페이지 {currentPage} / {totalPages}
-          </span>
-        </div>
       </div>
     </div>
   );
