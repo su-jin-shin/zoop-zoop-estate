@@ -175,7 +175,7 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-[100dvh] flex flex-col bg-white overflow-y-auto">
       {/* Header */}
       <div className="border-b border-gray-200 px-4 py-3 flex-shrink-0 bg-white">
         <div className="flex items-center">
@@ -196,7 +196,7 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
 
       {/* Content - 스크롤 영역 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-4 py-4 pb-8">
+        <div className="px-4 py-4 pb-4">
           {/* Map */}
           <div className="mb-4">
             <div className="h-48 rounded-lg overflow-hidden border border-gray-200">
@@ -210,7 +210,7 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
           </div>
           
           {/* Properties - 모바일과 데스크톱 다르게 렌더링 */}
-          <div className="mb-6">
+          <div className="mb-6 md:mb-2">
             {isMobile ? (
               // 모바일: 간단한 목록 (캐러셀 없음)
               <div className="flex flex-col space-y-4">
@@ -266,7 +266,7 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
           </div>
 
           {/* Pagination - 모바일과 데스크톱 모두에서 표시 */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-8 md:mb-2">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
