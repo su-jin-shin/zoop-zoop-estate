@@ -1,9 +1,8 @@
-
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import RegisteredNotificationCard from "./RegisteredNotificationCard";
 
@@ -33,6 +32,10 @@ const RegisteredNotificationsList = ({
   onToggleClick,
   onDeleteClick
 }: RegisteredNotificationsListProps) => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   const getPaginatedNotifications = () => {
     const ITEMS_PER_PAGE = 5;
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -40,38 +43,36 @@ const RegisteredNotificationsList = ({
   };
 
   return (
-    <Card className="h-[calc(100vh-200px)] sm:h-[calc(100vh-220px)]">
-      <CardContent className="p-4 h-full">
-        <div className="h-full flex flex-col">
-          <ScrollArea className="flex-1">
-            {notifications.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {getPaginatedNotifications().map((notification) => (
-                  <RegisteredNotificationCard
-                    key={notification.id}
-                    notification={notification}
-                    onToggleClick={onToggleClick}
-                    onDeleteClick={onDeleteClick}
-                  />
-                ))}
+    <Card>
+      <CardContent className="p-4">
+        <div>
+          {notifications.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {getPaginatedNotifications().map((notification) => (
+                <RegisteredNotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onToggleClick={onToggleClick}
+                  onDeleteClick={onDeleteClick}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 px-4">
+              <div>
+                <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">등록된 알림이 없습니다</h3>
+                <p className="text-sm sm:text-base text-gray-500 mb-4">원하는 조건의 매물 알림을 등록해보세요</p>
+                <Link to="/notification-settings">
+                  <Button className="bg-real-blue hover:bg-real-blue/90 text-white">
+                    알림 등록하기
+                  </Button>
+                </Link>
               </div>
-            ) : (
-              <div className="text-center py-12 px-4 h-full flex items-center justify-center">
-                <div>
-                  <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">등록된 알림이 없습니다</h3>
-                  <p className="text-sm sm:text-base text-gray-500 mb-4">원하는 조건의 매물 알림을 등록해보세요</p>
-                  <Link to="/notification-settings">
-                    <Button className="bg-real-blue hover:bg-real-blue/90 text-white">
-                      알림 등록하기
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </ScrollArea>
+            </div>
+          )}
           
-          <div className="pt-4 border-t bg-white flex-shrink-0">
+          <div className="pt-4 border-t bg-white">
             <Pagination>
               <PaginationContent className="flex-wrap gap-1">
                 <PaginationItem>
