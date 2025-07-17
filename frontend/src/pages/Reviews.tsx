@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { ArrowLeft, Star, Edit2, Trash2, MessageSquare, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -28,6 +28,10 @@ const Reviews = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
   const itemsPerPage = 3;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [reviewCurrentPage]);
 
   // Mock data for reviews
   const [reviews, setReviews] = useState([
@@ -211,7 +215,7 @@ const Reviews = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100dvh] bg-gray-50">
       <Navbar />
       
       <div className="container mx-auto px-3 sm:px-4 py-4 max-w-3xl">
