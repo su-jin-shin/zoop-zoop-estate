@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Navbar from "@/components/layout/Navbar";
 import { ArrowLeft, Star, Edit2, Trash2, MessageSquare, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -212,17 +211,16 @@ const Reviews = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="container mx-auto px-3 sm:px-4 py-4 flex-1 max-w-3xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 max-w-3xl">
         <div className="flex items-center mb-4">
           <Button variant="ghost" size="icon" className="mr-2 h-8 w-8" asChild>
             <Link to="/mypage">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          {/* <h1 className="text-base sm:text-lg font-semibold">나의 활동</h1> */}
           <h1 className="text-base sm:text-lg font-semibold">내가 작성한 리뷰</h1>
         </div>
 
@@ -251,254 +249,243 @@ const Reviews = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Card className="h-full overflow-hidden">
-          <CardContent className="p-0 h-full">
-            <Tabs defaultValue="reviews" className="w-full h-full flex flex-col">
-              {/* <div className="px-3 sm:px-4 pt-3 sm:pt-4">
-                <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
-                  <TabsTrigger value="reviews" className="text-xs sm:text-sm">내가 쓴 리뷰 ({reviews.length})</TabsTrigger>
-                  <TabsTrigger value="inquiries" className="text-xs sm:text-sm">문의 내역 ({inquiries.length})</TabsTrigger>
-                </TabsList>
-              </div> */}
-              
-              <TabsContent value="reviews" className="mt-0 flex-1 overflow-hidden">
-                <ScrollArea className="h-[calc(100vh-200px)]">
-                  {reviews.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500">
-                      <Star className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">작성한 리뷰가 없습니다.</p>
-                      <p className="text-xs mt-1">직접 살아본 공간, 리뷰로 공유해 주세요.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-3 p-3">
-                        {currentReviews.map((review) => (
-                          <Card key={review.id} className="border border-gray-200">
-                            <CardContent className="p-3">
-                              {/* Mobile optimized layout */}
-                              <div className="space-y-3">
-                                <div className="flex items-start gap-3">
-                                  <Link to={`/property/${review.propertyId}`} className="flex-shrink-0">
-                                    <img
-                                      src={review.propertyImage}
-                                      alt={review.propertyTitle}
-                                      className="w-16 h-12 object-cover rounded-md"
-                                    />
-                                  </Link>
-                                  
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center space-x-1">
-                                        {renderStars(review.rating)}
-                                        <span className="text-xs font-medium ml-1">({review.rating}/5)</span>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                                          <Edit2 className="h-3 w-3" />
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6 text-red-500"
-                                          onClick={() => handleDeleteClick(review.id, 'review')}
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Badge variant={review.status === "공개" ? "default" : "secondary"} className="text-xs">
-                                        {review.status}
-                                      </Badge>
-                                      <span className="text-xs text-gray-500">
-                                        {review.date}
-                                      </span>
-                                    </div>
-                                    
-                                    <p className="text-xs text-gray-600 mb-2 truncate">
-                                      매물: 
-                                      <Link 
-                                        to={`/property/${review.propertyId}`}
-                                        className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
-                                      >
-                                        {review.propertyTitle}
-                                      </Link>
-                                    </p>
-                                  </div>
-                                </div>
+        <Card>
+          <CardContent className="p-0">
+            <Tabs defaultValue="reviews" className="w-full">
+              <TabsContent value="reviews" className="mt-0">
+                {reviews.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500">
+                    <Star className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p className="text-sm">작성한 리뷰가 없습니다.</p>
+                    <p className="text-xs mt-1">직접 살아본 공간, 리뷰로 공유해 주세요.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3 p-3">
+                      {currentReviews.map((review) => (
+                        <Card key={review.id} className="border border-gray-200">
+                          <CardContent className="p-3">
+                            {/* Mobile optimized layout */}
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <Link to={`/property/${review.propertyId}`} className="flex-shrink-0">
+                                  <img
+                                    src={review.propertyImage}
+                                    alt={review.propertyTitle}
+                                    className="w-16 h-12 object-cover rounded-md"
+                                  />
+                                </Link>
                                 
-                                <div>
-                                  <p className="text-xs font-medium text-gray-700 mb-1">거주 후기</p>
-                                  <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded-md leading-relaxed">
-                                    {review.comment}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-1">
+                                      {renderStars(review.rating)}
+                                      <span className="text-xs font-medium ml-1">({review.rating}/5)</span>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-red-500"
+                                        onClick={() => handleDeleteClick(review.id, 'review')}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge variant={review.status === "공개" ? "default" : "secondary"} className="text-xs">
+                                      {review.status}
+                                    </Badge>
+                                    <span className="text-xs text-gray-500">
+                                      {review.date}
+                                    </span>
+                                  </div>
+                                  
+                                  <p className="text-xs text-gray-600 mb-2 truncate">
+                                    매물: 
+                                    <Link 
+                                      to={`/property/${review.propertyId}`}
+                                      className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
+                                    >
+                                      {review.propertyTitle}
+                                    </Link>
                                   </p>
                                 </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              
+                              <div>
+                                <p className="text-xs font-medium text-gray-700 mb-1">리뷰 내용</p>
+                                <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded-md leading-relaxed">
+                                  {review.comment}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {reviewTotalPages > 1 && (
+                      <div className="p-3">
+                        <Pagination>
+                          <PaginationContent className="flex-wrap gap-1">
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => setReviewCurrentPage(Math.max(1, reviewCurrentPage - 1))}
+                                className={`${reviewCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: Math.min(5, reviewTotalPages) }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setReviewCurrentPage(page)}
+                                  isActive={reviewCurrentPage === page}
+                                  className="cursor-pointer text-xs h-8 w-8"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => setReviewCurrentPage(Math.min(reviewTotalPages, reviewCurrentPage + 1))}
+                                className={`${reviewCurrentPage === reviewTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       </div>
-                      
-                      {reviewTotalPages > 1 && (
-                        <div className="p-3">
-                          <Pagination>
-                            <PaginationContent className="flex-wrap gap-1">
-                              <PaginationItem>
-                                <PaginationPrevious 
-                                  onClick={() => setReviewCurrentPage(Math.max(1, reviewCurrentPage - 1))}
-                                  className={`${reviewCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
-                                />
-                              </PaginationItem>
-                              {Array.from({ length: Math.min(5, reviewTotalPages) }, (_, i) => i + 1).map((page) => (
-                                <PaginationItem key={page}>
-                                  <PaginationLink
-                                    onClick={() => setReviewCurrentPage(page)}
-                                    isActive={reviewCurrentPage === page}
-                                    className="cursor-pointer text-xs h-8 w-8"
-                                  >
-                                    {page}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              ))}
-                              <PaginationItem>
-                                <PaginationNext 
-                                  onClick={() => setReviewCurrentPage(Math.min(reviewTotalPages, reviewCurrentPage + 1))}
-                                  className={`${reviewCurrentPage === reviewTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
-                                />
-                              </PaginationItem>
-                            </PaginationContent>
-                          </Pagination>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </ScrollArea>
+                    )}
+                  </>
+                )}
               </TabsContent>
               
-              <TabsContent value="inquiries" className="mt-0 flex-1 overflow-hidden">
-                <ScrollArea className="h-[calc(100vh-200px)]">
-                  {inquiries.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">문의 내역이 없습니다.</p>
-                      <p className="text-xs mt-1">궁금한 것이 있으면 언제든 문의해주세요!</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-3 p-3">
-                        {currentInquiries.map((inquiry) => (
-                          <Card key={inquiry.id} className="border border-gray-200">
-                            <CardContent className="p-3">
-                              {/* Mobile optimized layout */}
-                              <div className="space-y-3">
-                                <div className="flex items-start gap-3">
-                                  <Link to={`/property/${inquiry.propertyId}`} className="flex-shrink-0">
-                                    <img
-                                      src={inquiry.propertyImage}
-                                      alt={inquiry.propertyTitle}
-                                      className="w-16 h-12 object-cover rounded-md"
-                                    />
-                                  </Link>
-                                  
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <div className="flex items-center space-x-2">
-                                        {getStatusIcon(inquiry.status)}
-                                        <Badge variant={getStatusBadgeVariant(inquiry.status)} className="text-xs">
-                                          {inquiry.status}
-                                        </Badge>
-                                      </div>
-                                      <div className="flex items-center space-x-1">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                                          <Edit2 className="h-3 w-3" />
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6 text-red-500"
-                                          onClick={() => handleDeleteClick(inquiry.id, 'inquiry')}
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    
-                                    <h3 className="font-medium text-sm mb-1 line-clamp-1">{inquiry.title}</h3>
-                                    
-                                    <p className="text-xs text-gray-600 mb-1 truncate">
-                                      매물: 
-                                      <Link 
-                                        to={`/property/${inquiry.propertyId}`}
-                                        className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
-                                      >
-                                        {inquiry.propertyTitle}
-                                      </Link>
-                                    </p>
-                                    
-                                    <p className="text-xs text-gray-500">
-                                      문의일: {inquiry.date}
-                                    </p>
-                                  </div>
-                                </div>
+              <TabsContent value="inquiries" className="mt-0">
+                {inquiries.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p className="text-sm">문의 내역이 없습니다.</p>
+                    <p className="text-xs mt-1">궁금한 것이 있으면 언제든 문의해주세요!</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3 p-3">
+                      {currentInquiries.map((inquiry) => (
+                        <Card key={inquiry.id} className="border border-gray-200">
+                          <CardContent className="p-3">
+                            {/* Mobile optimized layout */}
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <Link to={`/property/${inquiry.propertyId}`} className="flex-shrink-0">
+                                  <img
+                                    src={inquiry.propertyImage}
+                                    alt={inquiry.propertyTitle}
+                                    className="w-16 h-12 object-cover rounded-md"
+                                  />
+                                </Link>
                                 
-                                <div className="space-y-2">
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-700 mb-1">문의 내용</p>
-                                    <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded-md leading-relaxed">
-                                      {inquiry.content}
-                                    </p>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-2">
+                                      {getStatusIcon(inquiry.status)}
+                                      <Badge variant={getStatusBadgeVariant(inquiry.status)} className="text-xs">
+                                        {inquiry.status}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-red-500"
+                                        onClick={() => handleDeleteClick(inquiry.id, 'inquiry')}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                   
-                                  {inquiry.response && (
-                                    <div>
-                                      <p className="text-xs font-medium text-gray-700 mb-1">답변</p>
-                                      <p className="text-xs text-gray-900 bg-blue-50 p-2 rounded-md border-l-4 border-blue-200 leading-relaxed">
-                                        {inquiry.response}
-                                      </p>
-                                    </div>
-                                  )}
+                                  <h3 className="font-medium text-sm mb-1 line-clamp-1">{inquiry.title}</h3>
+                                  
+                                  <p className="text-xs text-gray-600 mb-1 truncate">
+                                    매물: 
+                                    <Link 
+                                      to={`/property/${inquiry.propertyId}`}
+                                      className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
+                                    >
+                                      {inquiry.propertyTitle}
+                                    </Link>
+                                  </p>
+                                  
+                                  <p className="text-xs text-gray-500">
+                                    문의일: {inquiry.date}
+                                  </p>
                                 </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              
+                              <div className="space-y-2">
+                                <div>
+                                  <p className="text-xs font-medium text-gray-700 mb-1">문의 내용</p>
+                                  <p className="text-xs text-gray-900 bg-gray-50 p-2 rounded-md leading-relaxed">
+                                    {inquiry.content}
+                                  </p>
+                                </div>
+                                
+                                {inquiry.response && (
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-700 mb-1">답변</p>
+                                    <p className="text-xs text-gray-900 bg-blue-50 p-2 rounded-md border-l-4 border-blue-200 leading-relaxed">
+                                      {inquiry.response}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {inquiryTotalPages > 1 && (
+                      <div className="p-3">
+                        <Pagination>
+                          <PaginationContent className="flex-wrap gap-1">
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                onClick={() => setInquiryCurrentPage(Math.max(1, inquiryCurrentPage - 1))}
+                                className={`${inquiryCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: Math.min(5, inquiryTotalPages) }, (_, i) => i + 1).map((page) => (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setInquiryCurrentPage(page)}
+                                  isActive={inquiryCurrentPage === page}
+                                  className="cursor-pointer text-xs h-8 w-8"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                              <PaginationNext 
+                                onClick={() => setInquiryCurrentPage(Math.min(inquiryTotalPages, inquiryCurrentPage + 1))}
+                                className={`${inquiryCurrentPage === inquiryTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
                       </div>
-                      
-                      {inquiryTotalPages > 1 && (
-                        <div className="p-3">
-                          <Pagination>
-                            <PaginationContent className="flex-wrap gap-1">
-                              <PaginationItem>
-                                <PaginationPrevious 
-                                  onClick={() => setInquiryCurrentPage(Math.max(1, inquiryCurrentPage - 1))}
-                                  className={`${inquiryCurrentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
-                                />
-                              </PaginationItem>
-                              {Array.from({ length: Math.min(5, inquiryTotalPages) }, (_, i) => i + 1).map((page) => (
-                                <PaginationItem key={page}>
-                                  <PaginationLink
-                                    onClick={() => setInquiryCurrentPage(page)}
-                                    isActive={inquiryCurrentPage === page}
-                                    className="cursor-pointer text-xs h-8 w-8"
-                                  >
-                                    {page}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              ))}
-                              <PaginationItem>
-                                <PaginationNext 
-                                  onClick={() => setInquiryCurrentPage(Math.min(inquiryTotalPages, inquiryCurrentPage + 1))}
-                                  className={`${inquiryCurrentPage === inquiryTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} text-xs px-2 h-8`}
-                                />
-                              </PaginationItem>
-                            </PaginationContent>
-                          </Pagination>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </ScrollArea>
+                    )}
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
