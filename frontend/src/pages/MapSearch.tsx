@@ -157,6 +157,11 @@ const MapSearch = () => {
   const [sortBy, setSortBy] = useState("ranking");
   // const [isComplexSearch, setIsComplexSearch] = useState(true); // 단지명 검색 여부 (임시로 true로 설정)
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(true);
+  
+  // 면적별 시세 더보기 상태 관리
+  const [showAllSale, setShowAllSale] = useState(false);
+  const [showAllJeonse, setShowAllJeonse] = useState(false);
+  const [showAllMonthly, setShowAllMonthly] = useState(false);
 
   const propertyListRef = useRef<HTMLDivElement>(null);
 
@@ -259,49 +264,145 @@ const MapSearch = () => {
     navigate(`/property/${propertyId}`);
   };
 
-  // 면적별 시세 데이터 (단지 정보용)
-  const complexPriceInfo = [
-    {
-      area: "20평대",
-      minPrice: "7억 5천만원",
-      avgPrice: "8억 2천만원",
-      count: 24,
-      sampleProperty: {
-        id: 101,
-        description: "남향, 고층, 풀옵션"
+  // 면적별 시세 데이터 (단지 정보용) - 거래 유형별로 구분
+  const complexPriceInfo = {
+    sale: [
+      {
+        area: "20평대",
+        minPrice: "7억 5천만원",
+        avgPrice: "8억 2천만원",
+        count: 12,
+        sampleProperty: { id: 101, description: "남향, 고층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        minPrice: "8억원",
+        avgPrice: "8억 7천만원",
+        count: 8,
+        sampleProperty: { id: 102, description: "남동향, 중층, 신축" }
+      },
+      {
+        area: "30평대",
+        minPrice: "9억 8천만원",
+        avgPrice: "10억 5천만원",
+        count: 15,
+        sampleProperty: { id: 103, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        minPrice: "12억원",
+        avgPrice: "13억 2천만원",
+        count: 6,
+        sampleProperty: { id: 104, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        minPrice: "15억원",
+        avgPrice: "16억 5천만원",
+        count: 4,
+        sampleProperty: { id: 105, description: "초대형 평수, 최고급" }
+      },
+      {
+        area: "60평대",
+        minPrice: "18억원",
+        avgPrice: "20억원",
+        count: 2,
+        sampleProperty: { id: 106, description: "특별한 설계, 프리미엄급" }
       }
-    },
-    {
-      area: "24평",
-      minPrice: "8억원",
-      avgPrice: "8억 7천만원",
-      count: 18,
-      sampleProperty: {
-        id: 102,
-        description: "남동향, 중층, 신축"
+    ],
+    jeonse: [
+      {
+        area: "20평대",
+        minPrice: "4억 5천만원",
+        avgPrice: "5억 2천만원",
+        count: 18,
+        sampleProperty: { id: 201, description: "남향, 중층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        minPrice: "5억원",
+        avgPrice: "5억 7천만원",
+        count: 14,
+        sampleProperty: { id: 202, description: "남동향, 고층, 신축" }
+      },
+      {
+        area: "30평대",
+        minPrice: "6억원",
+        avgPrice: "6억 8천만원",
+        count: 22,
+        sampleProperty: { id: 203, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        minPrice: "7억 5천만원",
+        avgPrice: "8억 2천만원",
+        count: 10,
+        sampleProperty: { id: 204, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        minPrice: "9억원",
+        avgPrice: "10억원",
+        count: 6,
+        sampleProperty: { id: 205, description: "초대형 평수, 최고급" }
       }
-    },
-    {
-      area: "30평대",
-      minPrice: "9억 8천만원",
-      avgPrice: "10억 5천만원",
-      count: 32,
-      sampleProperty: {
-        id: 103,
-        description: "한강뷰, 고층, 프리미엄"
+    ],
+    monthly: [
+      {
+        area: "20평대",
+        deposit: "1억~2억",
+        minRent: "80만원",
+        avgRent: "95만원",
+        count: 25,
+        sampleProperty: { id: 301, description: "남향, 중층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        deposit: "1억 5천~2억 5천",
+        minRent: "90만원",
+        avgRent: "110만원",
+        count: 20,
+        sampleProperty: { id: 302, description: "남동향, 고층, 신축" }
+      },
+      {
+        area: "30평대",
+        deposit: "2억~3억",
+        minRent: "120만원",
+        avgRent: "145만원",
+        count: 28,
+        sampleProperty: { id: 303, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        deposit: "3억~4억",
+        minRent: "150만원",
+        avgRent: "180만원",
+        count: 12,
+        sampleProperty: { id: 304, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        deposit: "4억~5억",
+        minRent: "200만원",
+        avgRent: "230만원",
+        count: 8,
+        sampleProperty: { id: 305, description: "초대형 평수, 최고급" }
+      },
+      {
+        area: "60평대",
+        deposit: "5억~6억",
+        minRent: "250만원",
+        avgRent: "280만원",
+        count: 5,
+        sampleProperty: { id: 306, description: "특별한 설계, 프리미엄급" }
       }
-    },
-    {
-      area: "40평대",
-      minPrice: "12억원",
-      avgPrice: "13억 2천만원",
-      count: 16,
-      sampleProperty: {
-        id: 104,
-        description: "펜트하우스급, 최고층"
-      }
-    }
-  ];
+    ]
+  };
+
+  // 더보기 상태에 따라 표시할 데이터 결정
+  const getVisibleItems = (items: any[], showAll: boolean) => {
+    return showAll ? items : items.slice(0, 4);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -385,33 +486,139 @@ const MapSearch = () => {
                   </CollapsibleTrigger>
                   
                   <CollapsibleContent className="mt-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                      {complexPriceInfo.map((info, index) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium text-sm text-gray-900">{info.area}</span>
-                              <span className="text-xs text-gray-500">({info.count}세대)</span>
+                    <Tabs defaultValue="sale" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3 mb-4">
+                        <TabsTrigger value="sale" className="text-xs">매매</TabsTrigger>
+                        <TabsTrigger value="jeonse" className="text-xs">전세</TabsTrigger>
+                        <TabsTrigger value="monthly" className="text-xs">월세</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="sale" className="mt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                          {getVisibleItems(complexPriceInfo.sale, showAllSale).map((info, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
+                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                                <div>
+                                  <p className="text-gray-600">최저가</p>
+                                  <button
+                                    onClick={() => handlePropertyClick(info.sampleProperty.id)}
+                                    className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
+                                  >
+                                    {info.minPrice}
+                                  </button>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">평균가</p>
+                                  <p className="font-medium text-gray-900">{info.avgPrice}</p>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                            <div>
-                              <p className="text-gray-600">최저가</p>
-                              <button
-                                onClick={() => handlePropertyClick(info.sampleProperty.id)}
-                                className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
-                              >
-                                {info.minPrice}
-                              </button>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">평균가</p>
-                              <p className="font-medium text-gray-900">{info.avgPrice}</p>
-                            </div>
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                        {complexPriceInfo.sale.length > 4 && (
+                          <div className="mt-3 text-center">
+                            <button
+                              onClick={() => setShowAllSale(!showAllSale)}
+                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                            >
+                              {showAllSale ? '접기' : `더보기 (+${complexPriceInfo.sale.length - 4}개)`}
+                            </button>
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="jeonse" className="mt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                          {getVisibleItems(complexPriceInfo.jeonse, showAllJeonse).map((info, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
+                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                                <div>
+                                  <p className="text-gray-600">최저가</p>
+                                  <button
+                                    onClick={() => handlePropertyClick(info.sampleProperty.id)}
+                                    className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
+                                  >
+                                    {info.minPrice}
+                                  </button>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">평균가</p>
+                                  <p className="font-medium text-gray-900">{info.avgPrice}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {complexPriceInfo.jeonse.length > 4 && (
+                          <div className="mt-3 text-center">
+                            <button
+                              onClick={() => setShowAllJeonse(!showAllJeonse)}
+                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                            >
+                              {showAllJeonse ? '접기' : `더보기 (+${complexPriceInfo.jeonse.length - 4}개)`}
+                            </button>
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="monthly" className="mt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                          {getVisibleItems(complexPriceInfo.monthly, showAllMonthly).map((info, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
+                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
+                                </div>
+                              </div>
+                              <div className="space-y-2 text-xs">
+                                <div>
+                                  <p className="text-gray-600">보증금</p>
+                                  <p className="font-medium text-gray-900">{info.deposit}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <p className="text-gray-600">최저</p>
+                                    <button
+                                      onClick={() => handlePropertyClick(info.sampleProperty.id)}
+                                      className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
+                                    >
+                                      {info.minRent}
+                                    </button>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">평균</p>
+                                    <p className="font-medium text-gray-900">{info.avgRent}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {complexPriceInfo.monthly.length > 4 && (
+                          <div className="mt-3 text-center">
+                            <button
+                              onClick={() => setShowAllMonthly(!showAllMonthly)}
+                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                            >
+                              {showAllMonthly ? '접기' : `더보기 (+${complexPriceInfo.monthly.length - 4}개)`}
+                            </button>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
                   </CollapsibleContent>
                 </Collapsible>
               </div>
