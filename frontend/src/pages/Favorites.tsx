@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import Navbar from "@/components/layout/Navbar";
-import FavoritesPropertyCard from "@/components/property/FavoritesPropertyCard";
+import FavoritePropertyCard from "@/components/property/FavoritePropertyCard";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
@@ -220,8 +220,10 @@ const Favorites = () => {
   const [recentProperties, setRecentProperties] = useState<RecentProperty[]>(recentPropertiesInit);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
+  const [recentDeleteDialogOpen, setRecentDeleteDialogOpen] = useState(false);
   const [clearAllType, setClearAllType] = useState<'favorites' | 'recent'>('favorites');
   const [removeId, setRemoveId] = useState<number|null>(null);
+  const [recentRemoveId, setRecentRemoveId] = useState<number|null>(null);
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [recentPage, setRecentPage] = useState(1);
   const { toast } = useToast();
@@ -247,6 +249,28 @@ const Favorites = () => {
   const handleRemoveCancel = () => {
     setDialogOpen(false);
     setRemoveId(null);
+  };
+
+  const handleRecentRemove = (id: number) => {
+    setRecentRemoveId(id);
+    setRecentDeleteDialogOpen(true);
+  };
+
+  const handleRecentRemoveConfirm = () => {
+    if (recentRemoveId) {
+      setRecentProperties((prev) => prev.filter((property) => property.id !== recentRemoveId));
+      setRecentDeleteDialogOpen(false);
+      setRecentRemoveId(null);
+      toast({
+        title: "최근 본 매물에서 삭제되었습니다",
+        description: "해당 매물이 최근 본 목록에서 제거되었습니다.",
+      });
+    }
+  };
+
+  const handleRecentRemoveCancel = () => {
+    setRecentDeleteDialogOpen(false);
+    setRecentRemoveId(null);
   };
 
   const handleRecentHeartClick = (id: number) => {
@@ -368,6 +392,33 @@ const Favorites = () => {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* 최근 본 매물 개별 삭제 확인 다이얼로그 */}
+        <AlertDialog open={recentDeleteDialogOpen} onOpenChange={setRecentDeleteDialogOpen}>
+          <AlertDialogContent
+            className="
+              w-[90vw]            /* 모바일 폭 */
+              max-w-xs
+              sm:max-w-md
+              !mx-0               /* ← mx-4를 강제로 0으로 덮어씀 */
+            "
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-base sm:text-lg">최근 본 매물을 삭제하시겠습니까?</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm">
+                최근 본 목록에서 정말로 이 매물을 제거하시겠습니까?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel onClick={handleRecentRemoveCancel} className="w-full sm:w-auto">
+                취소
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleRecentRemoveConfirm} className="w-full sm:w-auto">
+                확인
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* 전체 삭제 확인 다이얼로그 */}
         <AlertDialog open={clearAllDialogOpen} onOpenChange={() => setClearAllDialogOpen(false)}>
           <AlertDialogContent
@@ -444,7 +495,7 @@ const Favorites = () => {
                       <div className={isMobile ? "space-y-3" : "grid grid-cols-1 gap-4"}>
                         {getFavoritesPaginated().map(property => (
                           <div key={property.id} className="w-full">
-                            <FavoritesPropertyCard 
+                            <FavoritePropertyCard 
                               {...property} 
                               isFavoriteDefault
                               onRemove={() => handleHeartClick(property.id)}
@@ -540,7 +591,7 @@ const Favorites = () => {
                           const isFavorite = favoriteProperties.some(fp => fp.id === property.id);
                           return (
                             <div key={property.id} className="relative w-full">
-                              <FavoritesPropertyCard 
+                              <FavoritePropertyCard 
                                 {...property} 
                                 cardHeight="default"
                                 vertical={isMobile}
@@ -553,7 +604,7 @@ const Favorites = () => {
                                   {property.viewedAt}
                                 </span>
                               </div>
-                              <div className="absolute top-3 right-3">
+                              <div className="absolute top-3 right-3 flex gap-1">
                                 <button
                                   className="p-1.5 z-20 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
                                   onClick={() => handleRecentHeartClick(property.id)}
@@ -564,6 +615,13 @@ const Favorites = () => {
                                       isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"
                                     }`}
                                   />
+                                </button>
+                                <button
+                                  className="p-1.5 z-20 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
+                                  onClick={() => handleRecentRemove(property.id)}
+                                  aria-label="최근 본 매물에서 삭제"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
                                 </button>
                               </div>
                             </div>
