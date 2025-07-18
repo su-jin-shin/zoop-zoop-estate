@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ArrowLeft, Trash2, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -210,6 +210,83 @@ const recentPropertiesInit: RecentProperty[] = [
     imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3",
     viewedAt: "1주일 전",
     featured: true,
+  },
+  {
+    id: 12,
+    title: "깨끗한 원룸, 반려동물 가능",
+    address: "서울시 은평구 응암동 222-33",
+    price: "38만원",
+    deposit: "800만원",
+    rentalType: "월세",
+    propertyType: "원룸",
+    size: "10평",
+    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3",
+    viewedAt: "1주일 전",
+    featured: false,
+  },
+  {
+    id: 13,
+    title: "넓은 투룸, 남향, 베란다",
+    address: "서울시 노원구 상계동 777-88",
+    price: "48만원",
+    deposit: "2000만원",
+    rentalType: "월세",
+    propertyType: "아파트",
+    size: "20평",
+    imageUrl: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?ixlib=rb-4.0.3",
+    viewedAt: "2주일 전",
+    featured: true,
+  },
+  {
+    id: 14,
+    title: "모던 오피스텔, 지하철역 도보 3분",
+    address: "서울시 송파구 잠실동 555-66",
+    price: "75만원",
+    deposit: "7000만원",
+    rentalType: "월세",
+    propertyType: "오피스텔",
+    size: "18평",
+    imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3",
+    viewedAt: "2주일 전",
+    featured: false,
+  },
+  {
+    id: 15,
+    title: "신축 빌라, 주차 2대 가능",
+    address: "서울시 구로구 구로동 444-55",
+    price: "52만원",
+    deposit: "3500만원",
+    rentalType: "월세",
+    propertyType: "빌라",
+    size: "25평",
+    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3",
+    viewedAt: "3주일 전",
+    featured: true,
+  },
+  {
+    id: 16,
+    title: "고급 아파트, 최고층 전망",
+    address: "서울시 서초구 서초동 999-00",
+    price: "1억 5000만원",
+    rentalType: "매매",
+    propertyType: "아파트",
+    size: "35평",
+    imageUrl: "https://images.unsplash.com/photo-1486304873000-235643847519?ixlib=rb-4.0.3",
+    viewedAt: "1개월 전",
+    featured: false,
+  },
+  {
+    id: 17,
+    title: "조용한 단독주택, 마당 있음",
+    address: "서울시 성북구 성북동 123-99",
+    price: "85만원",
+    deposit: "1억 2000만원",
+    rentalType: "전세",
+    propertyType: "단독주택",
+    size: "28평",
+    imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3",
+    viewedAt: "1개월 전",
+    featured: true,
   }
 ];
 
@@ -228,6 +305,10 @@ const Favorites = () => {
   const [recentPage, setRecentPage] = useState(1);
   const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 640px)");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [favoritesPage, recentPage]);
 
   const handleHeartClick = (id: number) => {
     setRemoveId(id);
