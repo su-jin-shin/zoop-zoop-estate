@@ -230,7 +230,14 @@ const Reviews = () => {
 
         {/* 삭제 확인 다이얼로그 */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent className="mx-4 sm:mx-0">
+          <AlertDialogContent
+            className="
+              w-[90vw]            /* 모바일 폭 */
+              max-w-xs
+              sm:max-w-md
+              !mx-0               /* ← mx-4를 강제로 0으로 덮어씀 */
+            "
+          >
             <AlertDialogHeader>
               <AlertDialogTitle className="text-base sm:text-lg">
                 {deleteType === 'review' ? '리뷰를 삭제하시겠습니까?' : '문의를 삭제하시겠습니까?'}
