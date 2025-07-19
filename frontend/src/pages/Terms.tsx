@@ -99,7 +99,7 @@ const Terms = () => {
           <div className="mt-12 pt-8 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               시행일자: 2025년 1월 1일<br />
-              문의처: support@zoop-zoop.com
+              문의처: support@zoopzoop.dev
             </p>
           </div>
         </div>
