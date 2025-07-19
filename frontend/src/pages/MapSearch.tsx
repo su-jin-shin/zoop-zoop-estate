@@ -23,7 +23,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import AreaPriceInfo from "@/components/property/AreaPriceInfo";
 
 // Mock properties for the map view - expanded for pagination demo
 const mapProperties = [
@@ -157,6 +157,11 @@ const MapSearch = () => {
   const [sortBy, setSortBy] = useState("ranking");
   // const [isComplexSearch, setIsComplexSearch] = useState(true); // 단지명 검색 여부 (임시로 true로 설정)
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(true);
+  
+  // 면적별 시세 더보기 상태 관리
+  const [showAllSale, setShowAllSale] = useState(false);
+  const [showAllJeonse, setShowAllJeonse] = useState(false);
+  const [showAllMonthly, setShowAllMonthly] = useState(false);
 
   const propertyListRef = useRef<HTMLDivElement>(null);
 
@@ -259,49 +264,140 @@ const MapSearch = () => {
     navigate(`/property/${propertyId}`);
   };
 
-  // 면적별 시세 데이터 (단지 정보용)
-  const complexPriceInfo = [
-    {
-      area: "20평대",
-      minPrice: "7억 5천만원",
-      avgPrice: "8억 2천만원",
-      count: 24,
-      sampleProperty: {
-        id: 101,
-        description: "남향, 고층, 풀옵션"
+  // 면적별 시세 데이터 (단지 정보용) - 거래 유형별로 구분
+  const complexPriceInfo = {
+    sale: [
+      {
+        area: "20평대",
+        minPrice: "7억 5천만원",
+        avgPrice: "8억 2천만원",
+        count: 12,
+        sampleProperty: { id: 101, description: "남향, 고층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        minPrice: "8억원",
+        avgPrice: "8억 7천만원",
+        count: 8,
+        sampleProperty: { id: 102, description: "남동향, 중층, 신축" }
+      },
+      {
+        area: "30평대",
+        minPrice: "9억 8천만원",
+        avgPrice: "10억 5천만원",
+        count: 15,
+        sampleProperty: { id: 103, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        minPrice: "12억원",
+        avgPrice: "13억 2천만원",
+        count: 6,
+        sampleProperty: { id: 104, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        minPrice: "15억원",
+        avgPrice: "16억 5천만원",
+        count: 4,
+        sampleProperty: { id: 105, description: "초대형 평수, 최고급" }
+      },
+      {
+        area: "60평대",
+        minPrice: "18억원",
+        avgPrice: "20억원",
+        count: 2,
+        sampleProperty: { id: 106, description: "특별한 설계, 프리미엄급" }
       }
-    },
-    {
-      area: "24평",
-      minPrice: "8억원",
-      avgPrice: "8억 7천만원",
-      count: 18,
-      sampleProperty: {
-        id: 102,
-        description: "남동향, 중층, 신축"
+    ],
+    jeonse: [
+      {
+        area: "20평대",
+        minPrice: "4억 5천만원",
+        avgPrice: "5억 2천만원",
+        count: 18,
+        sampleProperty: { id: 201, description: "남향, 중층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        minPrice: "5억원",
+        avgPrice: "5억 7천만원",
+        count: 14,
+        sampleProperty: { id: 202, description: "남동향, 고층, 신축" }
+      },
+      {
+        area: "30평대",
+        minPrice: "6억원",
+        avgPrice: "6억 8천만원",
+        count: 22,
+        sampleProperty: { id: 203, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        minPrice: "7억 5천만원",
+        avgPrice: "8억 2천만원",
+        count: 10,
+        sampleProperty: { id: 204, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        minPrice: "9억원",
+        avgPrice: "10억원",
+        count: 6,
+        sampleProperty: { id: 205, description: "초대형 평수, 최고급" }
       }
-    },
-    {
-      area: "30평대",
-      minPrice: "9억 8천만원",
-      avgPrice: "10억 5천만원",
-      count: 32,
-      sampleProperty: {
-        id: 103,
-        description: "한강뷰, 고층, 프리미엄"
+    ],
+    monthly: [
+      {
+        area: "20평대",
+        deposit: "1억~2억",
+        minRent: "80만원",
+        avgRent: "95만원",
+        count: 25,
+        sampleProperty: { id: 301, description: "남향, 중층, 풀옵션" }
+      },
+      {
+        area: "24평",
+        deposit: "1억 5천~2억 5천",
+        minRent: "90만원",
+        avgRent: "110만원",
+        count: 20,
+        sampleProperty: { id: 302, description: "남동향, 고층, 신축" }
+      },
+      {
+        area: "30평대",
+        deposit: "2억~3억",
+        minRent: "120만원",
+        avgRent: "145만원",
+        count: 28,
+        sampleProperty: { id: 303, description: "한강뷰, 고층, 프리미엄" }
+      },
+      {
+        area: "40평대",
+        deposit: "3억~4억",
+        minRent: "150만원",
+        avgRent: "180만원",
+        count: 12,
+        sampleProperty: { id: 304, description: "펜트하우스급, 최고층" }
+      },
+      {
+        area: "50평대",
+        deposit: "4억~5억",
+        minRent: "200만원",
+        avgRent: "230만원",
+        count: 8,
+        sampleProperty: { id: 305, description: "초대형 평수, 최고급" }
+      },
+      {
+        area: "60평대",
+        deposit: "5억~6억",
+        minRent: "250만원",
+        avgRent: "280만원",
+        count: 5,
+        sampleProperty: { id: 306, description: "특별한 설계, 프리미엄급" }
       }
-    },
-    {
-      area: "40평대",
-      minPrice: "12억원",
-      avgPrice: "13억 2천만원",
-      count: 16,
-      sampleProperty: {
-        id: 104,
-        description: "펜트하우스급, 최고층"
-      }
-    }
-  ];
+    ]
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -368,53 +464,11 @@ const MapSearch = () => {
               </div>
 
               {/* 면적별 시세 섹션 추가 */}
-              <div className="mb-3">
-                <Collapsible open={isPriceInfoOpen} onOpenChange={setIsPriceInfoOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between p-0 h-auto font-normal hover:bg-transparent"
-                    >
-                      <p className="text-xs text-real-darkGray">면적별 시세</p>
-                      {isPriceInfoOpen ? (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent className="mt-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                      {complexPriceInfo.map((info, index) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium text-sm text-gray-900">{info.area}</span>
-                              <span className="text-xs text-gray-500">({info.count}세대)</span>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                            <div>
-                              <p className="text-gray-600">최저가</p>
-                              <button
-                                onClick={() => handlePropertyClick(info.sampleProperty.id)}
-                                className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
-                              >
-                                {info.minPrice}
-                              </button>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">평균가</p>
-                              <p className="font-medium text-gray-900">{info.avgPrice}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
+              <AreaPriceInfo
+                complexPriceInfo={complexPriceInfo}
+                onPropertyClick={handlePropertyClick}
+                className="mb-3"
+              />
 
             </div>
           )}

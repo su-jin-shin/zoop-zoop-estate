@@ -72,7 +72,7 @@ const Help = () => {
                   <Mail className="h-4 w-4 mr-3 text-gray-500" />
                   <div>
                     <p className="text-xs sm:text-sm font-medium">이메일 문의</p>
-                    <p className="text-xs text-gray-500">support@zoop-zoop.com</p>
+                    <p className="text-xs text-gray-500">support@zoopzoop.dev</p>
                   </div>
                 </button>
                 <Separator />

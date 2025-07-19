@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import Navbar from "@/components/layout/Navbar";
-import PropertyCard from "@/components/property/PropertyCard";
+import NotificationPropertyCard from "@/components/property/NotificationPropertyCard";
 import { useToast } from "@/hooks/use-toast";
 
 const NotificationHistory = () => {
@@ -300,7 +300,7 @@ const NotificationList = ({
                   <p className="text-xs text-gray-500 mb-2">{notification.notificationDescription}</p>
                 )}
                 <div className="w-full">
-                  <PropertyCard
+                  <NotificationPropertyCard
                     {...notification.property}
                     cardHeight="default"
                     suppressHeart={true}
