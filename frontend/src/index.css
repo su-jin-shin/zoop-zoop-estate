@@ -73,7 +73,7 @@
   }
 
   html {
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
     overflow-x: hidden !important;
     scroll-behavior: smooth;
     width: 100% !important;
