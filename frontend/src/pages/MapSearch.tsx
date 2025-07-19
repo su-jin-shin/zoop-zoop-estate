@@ -23,7 +23,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import AreaPriceInfo from "@/components/property/AreaPriceInfo";
 
 // Mock properties for the map view - expanded for pagination demo
 const mapProperties = [
@@ -399,11 +399,6 @@ const MapSearch = () => {
     ]
   };
 
-  // 더보기 상태에 따라 표시할 데이터 결정
-  const getVisibleItems = (items: any[], showAll: boolean) => {
-    return showAll ? items : items.slice(0, 4);
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -469,159 +464,11 @@ const MapSearch = () => {
               </div>
 
               {/* 면적별 시세 섹션 추가 */}
-              <div className="mb-3">
-                <Collapsible open={isPriceInfoOpen} onOpenChange={setIsPriceInfoOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between p-0 h-auto font-normal hover:bg-transparent"
-                    >
-                      <p className="text-xs text-real-darkGray">면적별 시세</p>
-                      {isPriceInfoOpen ? (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent className="mt-3">
-                    <Tabs defaultValue="sale" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 mb-4">
-                        <TabsTrigger value="sale" className="text-xs">매매</TabsTrigger>
-                        <TabsTrigger value="jeonse" className="text-xs">전세</TabsTrigger>
-                        <TabsTrigger value="monthly" className="text-xs">월세</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="sale" className="mt-0">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                          {getVisibleItems(complexPriceInfo.sale, showAllSale).map((info, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
-                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                                <div>
-                                  <p className="text-gray-600">최저가</p>
-                                  <button
-                                    onClick={() => handlePropertyClick(info.sampleProperty.id)}
-                                    className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
-                                  >
-                                    {info.minPrice}
-                                  </button>
-                                </div>
-                                <div>
-                                  <p className="text-gray-600">평균가</p>
-                                  <p className="font-medium text-gray-900">{info.avgPrice}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {complexPriceInfo.sale.length > 4 && (
-                          <div className="mt-3 text-center">
-                            <button
-                              onClick={() => setShowAllSale(!showAllSale)}
-                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                              {showAllSale ? '접기' : `더보기 (+${complexPriceInfo.sale.length - 4}개)`}
-                            </button>
-                          </div>
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="jeonse" className="mt-0">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                          {getVisibleItems(complexPriceInfo.jeonse, showAllJeonse).map((info, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
-                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                                <div>
-                                  <p className="text-gray-600">최저가</p>
-                                  <button
-                                    onClick={() => handlePropertyClick(info.sampleProperty.id)}
-                                    className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
-                                  >
-                                    {info.minPrice}
-                                  </button>
-                                </div>
-                                <div>
-                                  <p className="text-gray-600">평균가</p>
-                                  <p className="font-medium text-gray-900">{info.avgPrice}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {complexPriceInfo.jeonse.length > 4 && (
-                          <div className="mt-3 text-center">
-                            <button
-                              onClick={() => setShowAllJeonse(!showAllJeonse)}
-                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                              {showAllJeonse ? '접기' : `더보기 (+${complexPriceInfo.jeonse.length - 4}개)`}
-                            </button>
-                          </div>
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="monthly" className="mt-0">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                          {getVisibleItems(complexPriceInfo.monthly, showAllMonthly).map((info, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-medium text-sm text-gray-900">{info.area}</span>
-                                  <span className="text-xs text-gray-500">({info.count}세대)</span>
-                                </div>
-                              </div>
-                              <div className="space-y-2 text-xs">
-                                <div>
-                                  <p className="text-gray-600">보증금</p>
-                                  <p className="font-medium text-gray-900">{info.deposit}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div>
-                                    <p className="text-gray-600">최저</p>
-                                    <button
-                                      onClick={() => handlePropertyClick(info.sampleProperty.id)}
-                                      className="font-medium text-real-blue hover:text-real-blue/80 transition-colors text-left"
-                                    >
-                                      {info.minRent}
-                                    </button>
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-600">평균</p>
-                                    <p className="font-medium text-gray-900">{info.avgRent}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {complexPriceInfo.monthly.length > 4 && (
-                          <div className="mt-3 text-center">
-                            <button
-                              onClick={() => setShowAllMonthly(!showAllMonthly)}
-                              className="text-xs text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                              {showAllMonthly ? '접기' : `더보기 (+${complexPriceInfo.monthly.length - 4}개)`}
-                            </button>
-                          </div>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
+              <AreaPriceInfo
+                complexPriceInfo={complexPriceInfo}
+                onPropertyClick={handlePropertyClick}
+                className="mb-3"
+              />
 
             </div>
           )}
