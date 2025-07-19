@@ -26,7 +26,7 @@ const App = () => {
   /* ------------------------------------------------------------- */
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col"> 
+    <div className="w-full bg-white flex flex-col"> 
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
