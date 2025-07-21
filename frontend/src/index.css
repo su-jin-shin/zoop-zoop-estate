@@ -78,6 +78,7 @@
     scroll-behavior: smooth;
     width: 100% !important;
     max-width: 100% !important;
+    overscroll-behavior-y: contain;
   }
 
   body {
@@ -89,6 +90,7 @@
     max-width: 100% !important;
     left: auto !important;
     right: auto !important;
+    overscroll-behavior-y: contain;
   }
 
   /* 레이아웃 시프트 완전 방지 */

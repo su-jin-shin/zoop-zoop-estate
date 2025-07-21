@@ -115,7 +115,7 @@ const Privacy = () => {
                   <p>개인정보보호책임자</p>
                   <p>성명: 김줍줍</p>
                   <p>직책: 개인정보보호팀장</p>
-                  <p>연락처: privacy@zoop-zoop.com</p>
+                  <p>연락처: privacy@zoopzoop.dev</p>
                 </div>
               </div>
             </section>
@@ -132,7 +132,7 @@ const Privacy = () => {
           <div className="mt-12 pt-8 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               시행일자: 2025년 1월 1일<br />
-              문의처: privacy@zoop-zoop.com
+              문의처: privacy@zoopzoop.dev
             </p>
           </div>
         </div>

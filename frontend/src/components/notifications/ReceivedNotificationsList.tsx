@@ -1,6 +1,5 @@
-
+import { useEffect } from "react";
 import { Clock } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import ReceivedNotificationCard from "./ReceivedNotificationCard";
 
@@ -47,9 +46,13 @@ const ReceivedNotificationsList = ({
   onMarkAsRead,
   onMarkAsUnread
 }: ReceivedNotificationsListProps) => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+    
   if (notifications.length === 0) {
     return (
-      <div className="p-4 sm:p-6 text-center h-full flex items-center justify-center">
+      <div className="p-4 sm:p-6 text-center">
         <div>
           <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-gray-300 mx-auto mb-2" />
           <p className="text-xs sm:text-sm text-gray-500">해당하는 알림이 없습니다</p>
@@ -59,21 +62,19 @@ const ReceivedNotificationsList = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <ScrollArea className="flex-1">
-        <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
-          {notifications.map((notification) => (
-            <ReceivedNotificationCard
-              key={notification.id}
-              notification={notification}
-              onMarkAsRead={onMarkAsRead}
-              onMarkAsUnread={onMarkAsUnread}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+    <div>
+      <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
+        {notifications.map((notification) => (
+          <ReceivedNotificationCard
+            key={notification.id}
+            notification={notification}
+            onMarkAsRead={onMarkAsRead}
+            onMarkAsUnread={onMarkAsUnread}
+          />
+        ))}
+      </div>
       
-      <div className="p-2 sm:p-4 border-t bg-white flex-shrink-0">
+      <div className="p-2 sm:p-4 border-t bg-white">
         <Pagination>
           <PaginationContent className="flex-wrap gap-1">
             <PaginationItem>
@@ -104,11 +105,6 @@ const ReceivedNotificationsList = ({
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-        <div className="text-center mt-2">
-          <span className="text-xs text-gray-500">
-            페이지 {currentPage} / {totalPages}
-          </span>
-        </div>
       </div>
     </div>
   );

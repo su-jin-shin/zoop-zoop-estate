@@ -13,6 +13,7 @@ import {
 import { ChatHistory } from "./types/chatTypes";
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import ChatTitleEditForm from "./ChatTitleEditForm";
 
 type ChatHeaderProps = {
   chatHistories: ChatHistory[];
@@ -26,6 +27,45 @@ type ChatHeaderProps = {
   showPropertyList?: boolean;
   onBackToChat?: () => void;
   newChatLabelMap: Record<number, string>;
+};
+
+const groupChatsByDate = (chats: ChatHistory[]) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const groups: { [key: string]: ChatHistory[] } = {};
+  
+  chats.forEach(chat => {
+    const chatDate = new Date(chat.timestamp);
+    const chatDateString = chatDate.toDateString();
+    const todayString = today.toDateString();
+    const yesterdayString = yesterday.toDateString();
+    
+    let groupKey: string;
+    if (chatDateString === todayString) {
+      groupKey = '오늘';
+    } else if (chatDateString === yesterdayString) {
+      groupKey = '어제';
+    } else {
+      groupKey = chatDate.toLocaleDateString('ko-KR', {
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+    }
+    groups[groupKey].push(chat);
+  });
+  
+  // Sort chats within each group by timestamp (latest first)
+  Object.keys(groups).forEach(key => {
+    groups[key].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  });
+  
+  return groups;
 };
 
 const ChatHeader = ({ 
@@ -67,35 +107,30 @@ const ChatHeader = ({
     chat.messages.some(message => message.isUser)
   );
 
-  // Sort chat histories by timestamp (latest first)
-  const sortedChatHistories = [...chatsWithUserMessages].sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-
   // Group chats by date
-  const groupedChats = sortedChatHistories.reduce((groups, chat) => {
-    const date = new Date(chat.timestamp);
-    const dateKey = date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric'
-    }).replace(/\. /g, '.').replace(/\.$/, '');
-    
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
-    }
-    groups[dateKey].push(chat);
-    return groups;
-  }, {} as Record<string, ChatHistory[]>);
+  const groupedChats = groupChatsByDate(chatsWithUserMessages);
+  
+  // Define the order of groups (today, yesterday, then chronological)
+  const groupOrder = ['오늘', '어제'];
+  const otherGroups = Object.keys(groupedChats)
+    .filter(key => !groupOrder.includes(key))
+    .sort((a, b) => {
+      // Sort other groups by date (most recent first)
+      const dateA = new Date(a + ', ' + new Date().getFullYear());
+      const dateB = new Date(b + ', ' + new Date().getFullYear());
+      return dateB.getTime() - dateA.getTime();
+    });
+  
+  const finalGroupOrder = [...groupOrder.filter(key => groupedChats[key]), ...otherGroups];
 
   const handleEditStart = (chatId: number, currentTitle: string) => {
     setEditingChatId(chatId);
     setEditTitle(currentTitle);
   };
 
-  const handleEditSave = () => {
-    if (editingChatId && editTitle.trim()) {
-      editChatTitle(editingChatId, editTitle.trim());
+  const handleEditSave = (newTitle: string) => {
+    if (editingChatId && newTitle.trim()) {
+      editChatTitle(editingChatId, newTitle.trim());
     }
     setEditingChatId(null);
     setEditTitle("");
@@ -104,14 +139,6 @@ const ChatHeader = ({
   const handleEditCancel = () => {
     setEditingChatId(null);
     setEditTitle("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleEditSave();
-    } else if (e.key === 'Escape') {
-      handleEditCancel();
-    }
   };
 
   const handleBackButton = () => {
@@ -163,95 +190,73 @@ const ChatHeader = ({
           <DropdownMenuContent align="start" className="w-64 bg-white border shadow-lg z-50">
             <div className="max-h-64 overflow-y-auto">
               {hasAnyUserMessages ? (
-                Object.entries(groupedChats).map(([date, chats], groupIndex) => (
-                  <div key={date}>
-                    {groupIndex > 0 && <DropdownMenuSeparator />}
-                    <div className="px-2 py-1.5 text-xs font-medium text-gray-500">
-                      {date}
-                    </div>
-                    {chats.map((chat) => (
-                      <div key={chat.id} className="group">
-                        <DropdownMenuItem
-                          className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 ${
-                            chat.id === currentChatId ? 'bg-gray-100' : ''
-                          }`}
-                          onClick={() => editingChatId !== chat.id && switchToChat(chat.id)}
-                          onSelect={(e) => {
-                            if (editingChatId === chat.id) {
-                              e.preventDefault();
-                            }
-                          }}
-                        >
-                          <div className="flex-1 min-w-0">
+                <div className="p-2">
+                  {finalGroupOrder.map((groupKey) => (
+                    <div key={groupKey} className="mb-4 last:mb-0">
+                      <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100 mb-2">
+                        {groupKey}
+                      </div>
+                      <div className="space-y-2">
+                        {groupedChats[groupKey].map((chat) => (
+                          <div key={chat.id} className="group">
                             {editingChatId === chat.id ? (
-                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                <Input
-                                  value={editTitle}
-                                  onChange={(e) => setEditTitle(e.target.value)}
-                                  onKeyDown={handleKeyDown}
-                                  className="h-6 text-xs flex-1"
-                                  autoFocus
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-green-600 hover:text-green-800"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditSave();
-                                  }}
-                                >
-                                  <Check className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-gray-500 hover:text-gray-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditCancel();
-                                  }}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <ChatTitleEditForm
+                                currentTitle={getDropdownDisplayTitle(chat)}
+                                onSave={(newTitle) => handleEditSave(newTitle)}
+                                onCancel={handleEditCancel}
+                              />
                             ) : (
-                              <span className="text-xs truncate block">
-                                {getDropdownDisplayTitle(chat)}
-                              </span>
+                              <div
+                                className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${
+                                  chat.id === currentChatId 
+                                    ? 'bg-blue-50 border border-blue-200' 
+                                    : 'hover:bg-gray-50 border border-transparent'
+                                }`}
+                                onClick={() => switchToChat(chat.id)}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-sm font-medium truncate block text-gray-900 select-none">
+                                    {getDropdownDisplayTitle(chat)}
+                                  </span>
+                                  <span className="text-xs text-gray-500 mt-1 select-none">
+                                    {new Date(chat.timestamp).toLocaleTimeString('ko-KR', {
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditStart(chat.id, chat.title);
+                                    }}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteChat(chat.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
                             )}
                           </div>
-                          {editingChatId !== chat.id && (
-                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditStart(chat.id, chat.title);
-                                }}
-                              >
-                                <Edit2 className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-red-500 hover:text-red-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteChat(chat.id);
-                                }}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </DropdownMenuItem>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ))
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="p-4 text-center text-sm text-gray-500">
                   대화를 시작해보세요!

@@ -181,6 +181,23 @@ const AgencyDetail = () => {
     navigate(`/agency/${id}/reviews`);
   };
 
+  const scrollToProperties = () => {
+    setTimeout(() => {
+      const propertiesSection = document.getElementById('properties-section');
+      if (propertiesSection) {
+        propertiesSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    scrollToProperties();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Fixed Navbar */}
@@ -309,7 +326,7 @@ const AgencyDetail = () => {
           </Card>
 
           {/* Properties - with smaller cards and pagination */}
-          <Card>
+          <Card id="properties-section">
             <CardHeader>
               <CardTitle>등록 매물 ({totalProperties})</CardTitle>
             </CardHeader>
@@ -344,7 +361,7 @@ const AgencyDetail = () => {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (currentPage > 1) setCurrentPage(currentPage - 1);
+                            if (currentPage > 1) handlePageChange(currentPage - 1);
                           }}
                           className={`
                             text-xs sm:text-sm px-2 sm:px-3
@@ -363,7 +380,7 @@ const AgencyDetail = () => {
                             isActive={currentPage === page}
                             onClick={(e) => {
                               e.preventDefault();
-                              setCurrentPage(page);
+                              handlePageChange(page);
                             }}
                             className="h-8 w-8 text-xs sm:text-sm"
                           >
@@ -378,7 +395,7 @@ const AgencyDetail = () => {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                            if (currentPage < totalPages) handlePageChange(currentPage + 1);
                           }}
                           className={`
                             text-xs sm:text-sm px-2 sm:px-3

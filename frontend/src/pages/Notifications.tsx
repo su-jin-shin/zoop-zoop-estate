@@ -396,9 +396,9 @@ const Notifications = () => {
           </TabsList>
 
           <TabsContent value="received">
-            <Card className="h-[calc(100vh-200px)] sm:h-[calc(100vh-220px)]">
-              <CardContent className="p-0 h-full">
-                <Tabs defaultValue="all" className="w-full h-full flex flex-col" onValueChange={() => setReceivedCurrentPage(1)}>
+            <Card>
+              <CardContent className="p-0">
+                <Tabs defaultValue="all" className="w-full" onValueChange={() => setReceivedCurrentPage(1)}>
                   <div className="p-4 pb-0">
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="all" className="text-xs sm:text-sm px-2">
@@ -413,7 +413,7 @@ const Notifications = () => {
                     </TabsList>
                   </div>
                   
-                  <TabsContent value="all" className="mt-0 flex-1 overflow-hidden">
+                  <TabsContent value="all" className="mt-0">
                     <ReceivedNotificationsList 
                       notifications={getPaginatedNotifications(getFilteredReceivedNotifications('all'), receivedCurrentPage)}
                       totalPages={getTotalPages(getFilteredReceivedNotifications('all'))}
@@ -424,7 +424,7 @@ const Notifications = () => {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="unread" className="mt-0 flex-1 overflow-hidden">
+                  <TabsContent value="unread" className="mt-0">
                     <ReceivedNotificationsList 
                       notifications={getPaginatedNotifications(getFilteredReceivedNotifications('unread'), receivedCurrentPage)}
                       totalPages={getTotalPages(getFilteredReceivedNotifications('unread'))}
@@ -435,7 +435,7 @@ const Notifications = () => {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="read" className="mt-0 flex-1 overflow-hidden">
+                  <TabsContent value="read" className="mt-0">
                     <ReceivedNotificationsList 
                       notifications={getPaginatedNotifications(getFilteredReceivedNotifications('read'), receivedCurrentPage)}
                       totalPages={getTotalPages(getFilteredReceivedNotifications('read'))}

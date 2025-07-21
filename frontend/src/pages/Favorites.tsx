@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ArrowLeft, Trash2, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import Navbar from "@/components/layout/Navbar";
-import FavoritesPropertyCard from "@/components/property/FavoritesPropertyCard";
+import FavoritePropertyCard from "@/components/property/FavoritePropertyCard";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
@@ -210,6 +210,83 @@ const recentPropertiesInit: RecentProperty[] = [
     imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3",
     viewedAt: "1주일 전",
     featured: true,
+  },
+  {
+    id: 12,
+    title: "깨끗한 원룸, 반려동물 가능",
+    address: "서울시 은평구 응암동 222-33",
+    price: "38만원",
+    deposit: "800만원",
+    rentalType: "월세",
+    propertyType: "원룸",
+    size: "10평",
+    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3",
+    viewedAt: "1주일 전",
+    featured: false,
+  },
+  {
+    id: 13,
+    title: "넓은 투룸, 남향, 베란다",
+    address: "서울시 노원구 상계동 777-88",
+    price: "48만원",
+    deposit: "2000만원",
+    rentalType: "월세",
+    propertyType: "아파트",
+    size: "20평",
+    imageUrl: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?ixlib=rb-4.0.3",
+    viewedAt: "2주일 전",
+    featured: true,
+  },
+  {
+    id: 14,
+    title: "모던 오피스텔, 지하철역 도보 3분",
+    address: "서울시 송파구 잠실동 555-66",
+    price: "75만원",
+    deposit: "7000만원",
+    rentalType: "월세",
+    propertyType: "오피스텔",
+    size: "18평",
+    imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3",
+    viewedAt: "2주일 전",
+    featured: false,
+  },
+  {
+    id: 15,
+    title: "신축 빌라, 주차 2대 가능",
+    address: "서울시 구로구 구로동 444-55",
+    price: "52만원",
+    deposit: "3500만원",
+    rentalType: "월세",
+    propertyType: "빌라",
+    size: "25평",
+    imageUrl: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3",
+    viewedAt: "3주일 전",
+    featured: true,
+  },
+  {
+    id: 16,
+    title: "고급 아파트, 최고층 전망",
+    address: "서울시 서초구 서초동 999-00",
+    price: "1억 5000만원",
+    rentalType: "매매",
+    propertyType: "아파트",
+    size: "35평",
+    imageUrl: "https://images.unsplash.com/photo-1486304873000-235643847519?ixlib=rb-4.0.3",
+    viewedAt: "1개월 전",
+    featured: false,
+  },
+  {
+    id: 17,
+    title: "조용한 단독주택, 마당 있음",
+    address: "서울시 성북구 성북동 123-99",
+    price: "85만원",
+    deposit: "1억 2000만원",
+    rentalType: "전세",
+    propertyType: "단독주택",
+    size: "28평",
+    imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3",
+    viewedAt: "1개월 전",
+    featured: true,
   }
 ];
 
@@ -220,12 +297,18 @@ const Favorites = () => {
   const [recentProperties, setRecentProperties] = useState<RecentProperty[]>(recentPropertiesInit);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
+  const [recentDeleteDialogOpen, setRecentDeleteDialogOpen] = useState(false);
   const [clearAllType, setClearAllType] = useState<'favorites' | 'recent'>('favorites');
   const [removeId, setRemoveId] = useState<number|null>(null);
+  const [recentRemoveId, setRecentRemoveId] = useState<number|null>(null);
   const [favoritesPage, setFavoritesPage] = useState(1);
   const [recentPage, setRecentPage] = useState(1);
   const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 640px)");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [favoritesPage, recentPage]);
 
   const handleHeartClick = (id: number) => {
     setRemoveId(id);
@@ -247,6 +330,28 @@ const Favorites = () => {
   const handleRemoveCancel = () => {
     setDialogOpen(false);
     setRemoveId(null);
+  };
+
+  const handleRecentRemove = (id: number) => {
+    setRecentRemoveId(id);
+    setRecentDeleteDialogOpen(true);
+  };
+
+  const handleRecentRemoveConfirm = () => {
+    if (recentRemoveId) {
+      setRecentProperties((prev) => prev.filter((property) => property.id !== recentRemoveId));
+      setRecentDeleteDialogOpen(false);
+      setRecentRemoveId(null);
+      toast({
+        title: "최근 본 매물에서 삭제되었습니다",
+        description: "해당 매물이 최근 본 목록에서 제거되었습니다.",
+      });
+    }
+  };
+
+  const handleRecentRemoveCancel = () => {
+    setRecentDeleteDialogOpen(false);
+    setRecentRemoveId(null);
   };
 
   const handleRecentHeartClick = (id: number) => {
@@ -368,6 +473,33 @@ const Favorites = () => {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* 최근 본 매물 개별 삭제 확인 다이얼로그 */}
+        <AlertDialog open={recentDeleteDialogOpen} onOpenChange={setRecentDeleteDialogOpen}>
+          <AlertDialogContent
+            className="
+              w-[90vw]            /* 모바일 폭 */
+              max-w-xs
+              sm:max-w-md
+              !mx-0               /* ← mx-4를 강제로 0으로 덮어씀 */
+            "
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-base sm:text-lg">최근 본 매물을 삭제하시겠습니까?</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm">
+                최근 본 목록에서 정말로 이 매물을 제거하시겠습니까?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel onClick={handleRecentRemoveCancel} className="w-full sm:w-auto">
+                취소
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleRecentRemoveConfirm} className="w-full sm:w-auto">
+                확인
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* 전체 삭제 확인 다이얼로그 */}
         <AlertDialog open={clearAllDialogOpen} onOpenChange={() => setClearAllDialogOpen(false)}>
           <AlertDialogContent
@@ -444,7 +576,7 @@ const Favorites = () => {
                       <div className={isMobile ? "space-y-3" : "grid grid-cols-1 gap-4"}>
                         {getFavoritesPaginated().map(property => (
                           <div key={property.id} className="w-full">
-                            <FavoritesPropertyCard 
+                            <FavoritePropertyCard 
                               {...property} 
                               isFavoriteDefault
                               onRemove={() => handleHeartClick(property.id)}
@@ -540,7 +672,7 @@ const Favorites = () => {
                           const isFavorite = favoriteProperties.some(fp => fp.id === property.id);
                           return (
                             <div key={property.id} className="relative w-full">
-                              <FavoritesPropertyCard 
+                              <FavoritePropertyCard 
                                 {...property} 
                                 cardHeight="default"
                                 vertical={isMobile}
@@ -553,7 +685,7 @@ const Favorites = () => {
                                   {property.viewedAt}
                                 </span>
                               </div>
-                              <div className="absolute top-3 right-3">
+                              <div className="absolute top-3 right-3 flex gap-1">
                                 <button
                                   className="p-1.5 z-20 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
                                   onClick={() => handleRecentHeartClick(property.id)}
@@ -564,6 +696,13 @@ const Favorites = () => {
                                       isFavorite ? "fill-red-500 text-red-500" : "text-gray-400"
                                     }`}
                                   />
+                                </button>
+                                <button
+                                  className="p-1.5 z-20 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
+                                  onClick={() => handleRecentRemove(property.id)}
+                                  aria-label="최근 본 매물에서 삭제"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
                                 </button>
                               </div>
                             </div>
