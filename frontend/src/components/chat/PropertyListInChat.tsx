@@ -161,6 +161,19 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
     if (!isMobile && carouselApi) {
       carouselApi.scrollTo(page - 1);
     }
+
+    if (isMobile) {
+      setTimeout(() => {
+        const propertiesHeader = document.getElementById('properties-section');
+        if (propertiesHeader) {
+          propertiesHeader.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+        }
+      }, 100);
+    }
   };
 
   // 현재 페이지에 표시할 매물들 계산
@@ -196,7 +209,7 @@ const PropertyListInChat = ({ onBackToChat }: PropertyListInChatProps) => {
 
       {/* Content - 스크롤 영역 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-4 py-4 pb-4">
+        <div className="px-4 py-4 pb-4" id="properties-section">
           {/* Map */}
           <div className="mb-4">
             <div className="h-48 rounded-lg overflow-hidden border border-gray-200">
