@@ -16,7 +16,7 @@ const reasonList = [
 
 const Withdraw = () => {
   const navigate = useNavigate();
-  const [reason, setReason] = React.useState(reasonList[0]);
+  const [reason, setReason] = React.useState("");
   const [customReason, setCustomReason] = React.useState("");
 
   const handleWithdraw = (e: React.FormEvent) => {
@@ -40,11 +40,9 @@ const Withdraw = () => {
     // 실제 카카오톡 연동 해제 로직은 여기에 추가
   };
 
-  // "기타(직접 작성)" 선택 시 입력이 2글자 이상이어야 활성화
+  // 선택 안 했거나(빈 값) ‘기타’인데 2글자 미만이면 비활성화
   const isSubmitDisabled =
-    reason === "기타(직접 작성)"
-      ? customReason.trim().length < 2
-      : false;
+    !reason || (reason === "기타(직접 작성)" && customReason.trim().length < 2);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
