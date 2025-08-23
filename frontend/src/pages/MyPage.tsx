@@ -32,25 +32,6 @@ const MyPage = () => {
               <p className="text-real-darkGray text-xs sm:text-sm">example@email.com</p>
             </div>
           </div>
-
-          <div className="flex space-x-2 mt-3">
-            <Button
-              variant="outline"
-              className="flex-1 text-xs sm:text-sm py-1.5 h-8 sm:h-9"
-              asChild
-              size="sm"
-            >
-              <Link to="/profile-edit">프로필 수정</Link>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 text-xs sm:text-sm py-1.5 h-8 sm:h-9"
-              asChild
-              size="sm"
-            >
-              <Link to="/password-change">비밀번호 변경</Link>
-            </Button>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -71,38 +52,22 @@ const MyPage = () => {
               <span className="text-real-black text-xs sm:text-sm">내가 작성한 리뷰</span>
               <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
             </Link>
-            <Separator />
-            <Link to="/notifications" className="flex items-center justify-between p-3 hover:bg-gray-50 active:bg-gray-100">
-              <div className="flex items-center">
-                <Bell className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-real-darkGray" />
-                <span className="text-real-black text-xs sm:text-sm">알림</span>
-              </div>
-              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-            </Link>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden mt-4">
           <div>
-            <Link to="/settings" className="flex items-center justify-between p-3 hover:bg-gray-50 active:bg-gray-100">
-              <div className="flex items-center">
-                <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-real-darkGray" />
-                <span className="text-real-black text-xs sm:text-sm">설정</span>
-              </div>
-              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-            </Link>
-            <Separator />
-            <Link to="/help" className="flex items-center justify-between p-3 hover:bg-gray-50 active:bg-gray-100">
-              <span className="text-real-black text-xs sm:text-sm">고객센터</span>
-              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
-            </Link>
-            <Separator />
             <button
               onClick={handleLogout}
               className="flex items-center w-full p-3 hover:bg-gray-50 active:bg-gray-100 text-left text-red-500 font-medium text-xs sm:text-sm"
             >
               로그아웃
             </button>
+            <Separator />
+            <Link to="/withdraw" className="flex items-center justify-between p-3 hover:bg-gray-50 active:bg-gray-100">
+              <span className="text-real-black text-xs sm:text-sm">회원탈퇴</span>
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+            </Link>
           </div>
         </div>
       </div>

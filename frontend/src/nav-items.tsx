@@ -48,38 +48,38 @@ export const navItems: NavItem[] = [
     to: "/reviews",
     page: <Reviews />,
   },
-  {
-    to: "/notifications",
-    page: <Notifications />,
-  },
-  {
-    to: "/notification-settings",
-    page: <NotificationSettings />,
-  },
-  {
-    to: "/notifications/history",
-    page: <NotificationHistory />,
-  },
-  {
-    to: "/notifications/registered",
-    page: <RegisteredNotifications />,
-  },
+  // {
+  //   to: "/notifications",
+  //   page: <Notifications />,
+  // },
+  // {
+  //   to: "/notification-settings",
+  //   page: <NotificationSettings />,
+  // },
+  // {
+  //   to: "/notifications/history",
+  //   page: <NotificationHistory />,
+  // },
+  // {
+  //   to: "/notifications/registered",
+  //   page: <RegisteredNotifications />,
+  // },
   {
     to: "/login",
     page: <Login />,
   },
-  {
-    to: "/register", 
-    page: <Register />,
-  },
-  {
-    to: "/profile-edit",
-    page: <ProfileEdit />,
-  },
-  {
-    to: "/password-change",
-    page: <PasswordChange />,
-  },
+  // {
+  //   to: "/register", 
+  //   page: <Register />,
+  // },
+  // {
+  //   to: "/profile-edit",
+  //   page: <ProfileEdit />,
+  // },
+  // {
+  //   to: "/password-change",
+  //   page: <PasswordChange />,
+  // },
   {
     to: "/interest-areas",
     page: <InterestAreas />,

@@ -11,9 +11,10 @@ type CheckboxInputProps = {
 const CheckboxInput = ({ options, selectedOptions, setSelectedOptions, handleSubmit }: CheckboxInputProps) => {
   const handleOptionChange = (option: string, checked: boolean) => {
     if (checked) {
-      setSelectedOptions([...selectedOptions, option]);
+      // 하나만 선택되도록 새로운 옵션으로 교체
+      setSelectedOptions([option]);
     } else {
-      setSelectedOptions(selectedOptions.filter(item => item !== option));
+      setSelectedOptions([]);
     }
   };
 

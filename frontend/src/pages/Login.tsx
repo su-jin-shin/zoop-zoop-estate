@@ -81,59 +81,12 @@ const Login = () => {
       </nav>
       
       <div className="px-3 sm:px-4 py-4 sm:py-6 flex-1 flex flex-col max-w-md mx-auto w-full">
-        <div className="mb-4 sm:mb-6 text-center">
+        <div className="text-center">
           <h2 className="text-lg sm:text-xl font-bold text-real-black mb-1 sm:mb-2">줍줍에 오신 것을 환영합니다</h2>
-          <p className="text-real-darkGray text-xs sm:text-sm">계정 정보를 입력해주세요</p>
+          <p className="text-real-darkGray text-xs sm:text-sm">카카오 계정으로 서비스를 이용하실 수 있습니다.</p>
         </div>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4 w-full">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">이메일</FormLabel>
-                  <FormControl>
-                    <Input placeholder="example@email.com" {...field} className="text-xs sm:text-sm h-10 sm:h-11" />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs sm:text-sm">비밀번호</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} className="text-xs sm:text-sm h-10 sm:h-11" />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-real-blue hover:bg-blue-700 mt-3 sm:mt-4 h-10 sm:h-11 text-xs sm:text-sm"
-              disabled={isLoading}
-            >
-              {isLoading ? "로그인 중..." : "로그인"}
-            </Button>
-          </form>
-        </Form>
-
-        <div className="mt-4 sm:mt-6">
-          <div className="relative">
-            <Separator className="my-4" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="bg-white px-2 text-xs sm:text-sm text-real-darkGray">또는</span>
-            </div>
-          </div>
-          
+        <div className="mt-4 sm:mt-6">         
           <Button
             type="button"
             className="w-full h-10 sm:h-11 text-xs sm:text-sm mt-4 bg-yellow-400 hover:bg-yellow-500 text-black border-0"
@@ -156,14 +109,6 @@ const Login = () => {
           </Button>
         </div>
         
-        <div className="mt-4 sm:mt-6 text-center">
-          <p className="text-real-darkGray text-xs sm:text-sm">
-            계정이 없으신가요?{" "}
-            <Link to="/register" className="text-real-blue font-medium hover:underline">
-              회원가입
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

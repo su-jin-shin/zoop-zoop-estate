@@ -97,13 +97,13 @@ const Withdraw = () => {
             )}
           </div>
           <div className="flex flex-col gap-2 sm:gap-3 mt-6 sm:mt-8">
-            <Button
+            {/* <Button
               type="submit"
               className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm h-9 sm:h-10"
               disabled={isSubmitDisabled}
             >
               네, 탈퇴할래요
-            </Button>
+            </Button> */}
             <Button
               type="button"
               onClick={handleKakaoWithdraw}
